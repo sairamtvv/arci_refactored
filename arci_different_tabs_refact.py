@@ -74,7 +74,7 @@ class different_tabs():
         
         self.combo_num_sensor = ttk.Combobox(parameters_frame, width=12)
         self.combo_num_sensor.config(value = ("1", "2", "3", "4", "5", "6", "7", "8", "9"))
-        self.combo_num_sensor.set("1")
+        self.combo_num_sensor.set("6")
         self.combo_num_sensor.grid(column=1, row=0, padx=8, pady=4, sticky='W')
         #numberChosen.current(0)
                 
@@ -122,7 +122,7 @@ class different_tabs():
 
         
         #Button to quit
-        self.buttonquit=ttk.Button(parameters_frame, text="Quit",width=18,command=self.window.master.destroy)
+        self.buttonquit=ttk.Button(parameters_frame, text="Quit",width=18,command=self.window.analysis_obj._quit)
         self.buttonquit.grid(row=6, column=2)
         
         
@@ -152,8 +152,8 @@ class different_tabs():
                  
          
        # Button for Analysis
-        self.buttonanalysis = ttk.Button(self.widgetFrame,text='Analyze',width=18, command=self.window.analysis_obj.analysis_alldays)
-        self.buttonanalysis.grid(row=0, column=7)
+        self.buttonanalysis = ttk.Button(self.widgetFrame,text='Analyze',width=18, command=lambda:Thread(target=self.window.analysis_obj.analysis_alldays).start())
+        self.buttonanalysis.grid(row=0, column=7)  
         
         
         
@@ -376,13 +376,7 @@ class different_tabs():
     
     
     
-    def validate(self):
-        pass
     
-    def analysis_alldays(self):
-        pass
-    def completeacquisition(self):
-        pass
 
         
     def createtabs(self):
@@ -401,11 +395,7 @@ class different_tabs():
         tabControl.add(self.tab_input, text='Input')    # Add the tab -- COMMENTED OUT FOR CH08
         tabControl.pack(expand=1, fill="both")  # Pack to make visible
 
-    # Exit GUI cleanly
-    def _quit(self):
-        self.window.master.quit()
-        self.window.master.destroy()
-        exit() 
+
        
     
 

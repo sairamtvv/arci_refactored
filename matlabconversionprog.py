@@ -19,6 +19,8 @@ b = np.array( [[-372.675,372.434],[-372.671,372.437],[-372.669,372.435],
 
 def matlab_conver_func (a,dir_for_analy,sensor_name):
     
+    
+    
     #SF inrun stability
     
     g=9.78335;
@@ -444,8 +446,6 @@ def matlab_conver_func (a,dir_for_analy,sensor_name):
     
     
     
-    
-    
     #df = pd.DataFrame(data)
     df = pd.read_csv(dir_for_analy.joinpath("sample1.csv"))
     
@@ -577,10 +577,212 @@ def matlab_conver_func (a,dir_for_analy,sensor_name):
                 table.cell(i+1,j).text = str(df.values[i,j])
     
     # save the doc
-    doc.save(dir_for_analy.joinpath(sensor_name+'.docx'))
+    doc.save(dir_for_analy.joinpath('conform_'+sensor_name+'.docx'))
+    
+    plotting_graph(dir_for_analy,sensor_name)
+    
+    
+def endurance_test(df_endu_channels,dir_for_analy,sensor_name):
+    
+    doc = docx.Document()
+    section = doc.sections[0]
+    header = section.header
+    footer = section.footer
+    header_p = header.paragraphs[0]
+    footer_p=footer.paragraphs[0]
+    header_p.text = "EQA3/ELEC/ET/QC/ATL/19"
+    header_p.alignment =  2
+    header_p.bold= True
+    
+    footer_p.text="EQA3/ELEC/ET/QC/ATL/19 \t Revision: 00 \t Date:"
+    footer_p.alignment =  0
+    footer_p.bold= True
+    
+    
+    doc.add_heading('ACCEPTANCE TEST LEAF FOR ENDURANCE TEST ', 1)
+    
+    
+    #project_p = doc.add_paragraph("Date:")
+    #project_p.alignment = 1 # for left, 1 for right, 2 center, 3 justify ....
+    #project_p.bold = True
+    string_project="PROJECT: EQA-3 \nEQA-3 NO.__________________________\n"\
+                    +"Start Date:_________ \t \t \t \t \t \t "\
+                    +"END Date:___________ \n"\
+                    +'Test Condition:"+1g" at Ambient \n'\
+                    +"Test Reading Interval every 2 Hrs\n"\
+                    +"Total Endurance Test Time 24 Hrs"
+                    
+    
+    
+    project_p= doc.add_paragraph(string_project)
+    project_p.alignment = 0 # for left, 1 for right, 2 center, 3 justify ....
+    project_p.bold = True
+    
+    
+    df = pd.read_csv(dir_for_analy.joinpath("endu_sample1.csv"))
+    
+    
+    # add a table to the end and create a reference variable
+    # extra row is so we can add the header row
+    table = doc.add_table(df.shape[0]+1, df.shape[1])
+    
+    
+    table.style = 'TableGrid' #single lines in all cells
+    table.autofit = False
+    
+    col = table.columns[0] 
+    col.width=Inches(0.75)
+    cell=table.cell(1,1)
+    cell.width = Inches(2)
+    #col.width=Cm(1.0)
+    #col.width=360000 #=1cm
+    #for cell in table.cells:
+    #    cell.width = Inches(1)
+    
+    
+    
+    
+    print(table)
+    print('------------------------------------------')
+    
+    # add the header rows.
+    for j in range(df.shape[-1]):
+        if df.columns[j] == '*':
+            pass
+        else:
+            table.cell(0,j).text = df.columns[j]
+    
+    # add the rest of the data frame
+    for i in range(df.shape[0]):
+        for j in range(df.shape[-1]):
+            if df.values[i,j] == '*':
+                pass
+            else:
+                table.cell(i+1,j).text = str(df.values[i,j])
+    
+            #table.cell(i+1,j).text = str(df.values[i,j])
+    
+    #Finished table 1 which is actually one line
+    #-----------------------------------------------------------------
+    newline_p= doc.add_paragraph("\n\n")
+    
+    df = pd.read_csv(dir_for_analy.joinpath("endu_sample2.csv"))
+    
+    for i,j in zip(list(range(0,12)),list(range(0,2))):
+        df.iloc[i,j+1]=df_endu_channels.iloc[i,j]
+    
+    
+    
+    
+    # add a table to the end and create a reference variable
+    # extra row is so we can add the header row
+    table = doc.add_table(df.shape[0]+1, df.shape[1])
+    
+    
+    table.style = 'TableGrid' #single lines in all cells
+    table.autofit = False
+    
+    col = table.columns[0] 
+    col.width=Inches(0.75)
+    cell=table.cell(1,1)
+    cell.width = Inches(2)
+    #col.width=Cm(1.0)
+    #col.width=360000 #=1cm
+    #for cell in table.cells:
+    #    cell.width = Inches(1)
+    
+    
+    
+    
+    print(table)
+    print('------------------------------------------')
+    
+    # add the header rows.
+    for j in range(df.shape[-1]):
+        if df.columns[j] == '*':
+            pass
+        else:
+            table.cell(0,j).text = df.columns[j]
+    
+    # add the rest of the data frame
+    for i in range(df.shape[0]):
+        for j in range(df.shape[-1]):
+            if df.values[i,j] == '*':
+                pass
+            else:
+                table.cell(i+1,j).text = str(df.values[i,j])
+                #table.cell(i+1,j).text = str(df.values[i,j])
+    #end of table 2            
+    #-------------------------------------------------------------------------
+    newline2_p= doc.add_paragraph("\n\n")        
+    string_note="Note:**The above readings donot have any functional significance. The test is\n"\
+                +'only to check the Survivability of Sensor in Power "ON" condition' 
+    note_p= doc.add_paragraph(string_note)
+    note_p.alignment = 0 # for left, 1 for right, 2 center, 3 justify ....
+    note_p.bold = True  
+    
+    #---------------------------------------------------
+    #start of table 3
+    df = pd.read_csv(dir_for_analy.joinpath("endu_sample3.csv"))
+    
+    
+    # add a table to the end and create a reference variable
+    # extra row is so we can add the header row
+    table = doc.add_table(df.shape[0]+1, df.shape[1])
+    
+    
+    table.style = 'TableGrid' #single lines in all cells
+    table.autofit = False
+    
+    col = table.columns[0] 
+    col.width=Inches(0.75)
+    cell=table.cell(1,1)
+    cell.width = Inches(2)
+    #col.width=Cm(1.0)
+    #col.width=360000 #=1cm
+    #for cell in table.cells:
+    #    cell.width = Inches(1)
+    
+    
+    
+    
+    print(table)
+    print('------------------------------------------')
+    
+    # add the header rows.
+    for j in range(df.shape[-1]):
+        if df.columns[j] == '*':
+            pass
+        else:
+            table.cell(0,j).text = df.columns[j]
+    
+    # add the rest of the data frame
+    for i in range(df.shape[0]):
+        for j in range(df.shape[-1]):
+            if df.values[i,j] == '*':
+                pass
+            else:
+                table.cell(i+1,j).text = str(df.values[i,j])
+                #table.cell(i+1,j).text = str(df.values[i,j])
+    #end of table 2      
+    doc.save(dir_for_analy.joinpath('endurance_'+sensor_name+'.docx'))
+        
+    
+
+
+
+    
+def plotting_graph(dir_for_analy,sensor_name):
+    
+    #Getting the dates of their execution
+    df_day1=pd.read_csv(dir_for_analy.parent.joinpath('raw_text_L1.txt'))
+    label1=df_day1.iloc[0,1].split()[0]
+    df_day2=pd.read_csv(dir_for_analy.parent.joinpath('raw_text_L2.txt'))
+    label2=df_day2.iloc[0,1].split()[0]
+    df_day3=pd.read_csv(dir_for_analy.parent.joinpath('raw_text_L3.txt'))
+    label3=df_day3.iloc[0,1].split()[0]
     
     #Plotting the graphs
-    
     pdresult1 = pd.read_csv(dir_for_analy.joinpath('RESULT1.DAT'),delimiter= '\s+')
     pdresult2 = pd.read_csv(dir_for_analy.joinpath('RESULT2.DAT'),delimiter= '\s+')
     pdresult3 = pd.read_csv(dir_for_analy.joinpath('RESULT3.DAT'),delimiter= '\s+')
@@ -601,13 +803,13 @@ def matlab_conver_func (a,dir_for_analy,sensor_name):
     # Plot on that set of axes
     axes.grid(True)
     axes.plot(x, y_list1,color='red',linewidth=1,alpha=1,linestyle='-',marker='o',markersize=2,
-              markerfacecolor='red', markeredgewidth=3, markeredgecolor='red',label="x**2")
+              markerfacecolor='red', markeredgewidth=3, markeredgecolor='red',label=label1)
     
     
     axes.plot(x, y_list2,color='green',linewidth=1,alpha=1,linestyle='-',marker='s',markersize=2,
-              markerfacecolor='green', markeredgewidth=3, markeredgecolor='green',label="x**3")
+              markerfacecolor='green', markeredgewidth=3, markeredgecolor='green',label=label2)
     axes.plot(x, y_list3,color='blue',linewidth=1,alpha=1,linestyle='-',marker='s',markersize=2,
-              markerfacecolor='blue', markeredgewidth=3, markeredgecolor='blue',label="x**4")
+              markerfacecolor='blue', markeredgewidth=3, markeredgecolor='blue',label=label3)
     
     #axes.plot(x,z)
     axes.set_xlabel('Temp $^\circ$ C') # Notice the use of set_ to begin methods  
@@ -658,7 +860,7 @@ def matlab_conver_func (a,dir_for_analy,sensor_name):
                      textcoords="offset points", # how to position the text
                      xytext=(0,-3*index-60), # distance from text to points (x,y)
                      ha='center',color='blue') # horizontal alignment can be left, right or center 
-    
+    plt.savefig(dir_for_analy.joinpath('fig_'+sensor_name+'.png'))
     plt.show()
 
 

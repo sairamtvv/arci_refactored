@@ -15,7 +15,49 @@ from pywinauto.controls.common_controls import TabControlWrapper
 from pywinauto.keyboard import send_keys, KeySequenceError
 import glob
 
-from matlabconversionprog import matlab_conver_func
+from matlabconversionprog import matlab_conver_func,endurance_test
+from threading import Thread, Lock
+_db_lock = Lock() 
+
+from concurrent import futures
+import time
+import functools
+import multiprocessing  
+thread_pool_executor = futures.ThreadPoolExecutor(max_workers=1)
+
+
+def tk_after(target):
+ 
+        @functools.wraps(target)
+        def wrapper(self, *args, **kwargs):
+            args = (self,) + args
+            self.window.master.after(0, target, *args, **kwargs)
+     
+        return wrapper
+ 
+ 
+def submit_to_pool_executor(executor):
+    '''Decorates a method to be sumbited to the passed in executor'''
+    def decorator(target):
+ 
+        @functools.wraps(target)
+        def wrapper(*args, **kwargs):
+            result = executor.submit(target, *args, **kwargs)
+            result.add_done_callback(executor_done_call_back)
+            return result
+ 
+        return wrapper
+ 
+    return decorator
+ 
+ 
+def executor_done_call_back(future):
+    exception = future.exception()
+    if exception:
+        raise exception
+
+
+
 
 
 
@@ -24,8 +66,21 @@ class Analysis():
         
         self.window=window
         self.realrun=realrun
-#
-#
+        
+
+    def analysis_threaded(self):
+        #job_thread =Thread(target=self.analysis_alldays)
+        #job_thread.start()   
+        self.analysis_alldays()
+    
+    # Exit GUI cleanly
+    
+    def _quit(self):
+        self.window.master.quit()
+        self.window.master.destroy()
+        
+
+
 #    def analysis_russian(self):
 #        
 #        #list of all raw text files from all the days
@@ -191,7 +246,7 @@ class Analysis():
                 
                 
     
-    
+#    @submit_to_pool_executor(thread_pool_executor)
     def analysis_alldays(self):
         
         #INTERNAL when the file location can be got from the runs
@@ -244,7 +299,7 @@ class Analysis():
             
             
         #concatenating all the names of the days that need to be analyzed    
-        if len(self.window.diff_tabs.ones_days>0):
+        if len(self.window.diff_tabs.ones_days)>0:
            seperator = '_'
            dir_name_analysis="analysis"+seperator.join(self.window.diff_tabs.ones_days)
         else:
@@ -317,49 +372,70 @@ class Analysis():
                 reqfiles=['raw_text_L1.txt']
                 for file in reqfiles:
                     from_file=pathlib.Path(self.window.diff_tabs.resourcelocation+file)
-                    to_file=pathlib.Path(self.dir_where_analy_happ+file)
+                    to_file=pathlib.Path(self.dir_where_analy_happ.joinpath(file))
                     shutil.copy(from_file,to_file)
             elif comboday=="L2":
                 reqfiles=['raw_text_L2.txt']
                 for file in reqfiles:
                     from_file=pathlib.Path(self.window.diff_tabs.resourcelocation+file)
-                    to_file=pathlib.Path(self.dir_where_analy_happ+file)
+                    to_file=pathlib.Path(self.dir_where_analy_happ.joinpath(file))
                     shutil.copy(from_file,to_file)
             elif  comboday=="L3":
                 reqfiles=['raw_text_L3.txt']
                 for file in reqfiles:
                     from_file=pathlib.Path(self.window.diff_tabs.resourcelocation+file)
-                    to_file=pathlib.Path(self.dir_where_analy_happ+file)
+                    to_file=pathlib.Path(self.dir_where_analy_happ.joinpath(file))
                     shutil.copy(from_file,to_file)
                 
             elif  comboday=="D4":
                 reqfiles=['D4summary_temp1.txt','D4summary_temp2.txt','D4summary_temp3.txt','raw_text_D4_1_33.txt','raw_text_D4_2_33.txt','raw_text_D4_3_33.txt']
                 for file in reqfiles:
                     from_file=pathlib.Path(self.window.diff_tabs.resourcelocation+file)
-                    to_file=pathlib.Path(self.dir_where_analy_happ+file)
+                    to_file=pathlib.Path(self.dir_where_analy_happ.joinpath(file))
                     shutil.copy(from_file,to_file)
             elif comboday=="D5":
                 reqfiles=['D5summary_temp1.txt','D5summary_temp2.txt','D5summary_temp3.txt']
                 for file in reqfiles:
                     from_file=pathlib.Path(self.window.diff_tabs.resourcelocation+file)
-                    to_file=pathlib.Path(self.dir_where_analy_happ+file)
+                    to_file=pathlib.Path(self.dir_where_analy_happ.joinpath(file))
                     shutil.copy(from_file,to_file)
                 
             elif comboday=="D6":
                 reqfiles=['raw_text_D6.txt']
                 for file in reqfiles:
                     from_file=pathlib.Path(self.window.diff_tabs.resourcelocation+file)
-                    to_file=pathlib.Path(self.dir_where_analy_happ+file)
+                    to_file=pathlib.Path(self.dir_where_analy_happ.joinpath(file))
                     shutil.copy(from_file,to_file)
            
             else:
                 print("\n")
-            print("Copying the missing files from resource folder finished...\n")    
-            self.Dividing_into_channels()
-            self.placing_each_channel_direc()
-            
+        print("Copying the missing files from resource folder finished...\n") 
+        
+        
+        self.Dividing_into_channelsL123() 
+        self.placing_each_channel_direc()
+##            
     
     def placing_each_channel_direc(self):
+        
+        lst_channels101_to_106=["101 (VDC)","201 (VDC)","102 (VDC)","202 (VDC)","103 (VDC)","203 (VDC)","104 (VDC)","204 (VDC)","105 (VDC)","205 (VDC)","106 (VDC)","206 (VDC)","107 (VDC)","207 (VDC)","108 (VDC)","208 (VDC)"]
+        lst_channels108_to_116=["109 (VDC)","209 (VDC)","110 (VDC)","210 (VDC)","111 (VDC)","211 (VDC)","112 (VDC)","212 (VDC)","113 (VDC)","213 (VDC)","114 (VDC)","214 (VDC)","115 (VDC)","215 (VDC)","116 (VDC)","216 (VDC)"]
+        #list of all the channels
+        lstchannels=lst_channels101_to_106+lst_channels108_to_116
+        lst_all101channels=lstchannels[0::2]
+        
+        
+         #list of all raw text files from all the days
+        lstD4temp_33files=['raw_text_D4_1_33.txt','raw_text_D4_2_33.txt','raw_text_D4_3_33.txt']
+        lst_of_excelfiles=['(AS)_adj_param_m40.xlsm','(AS)_adj_param_p70.xlsm','(AS)_adj_param_p20.xlsm']
+        lst_ten_numbers=list(range(0,10))
+        lstfinalD45files=['finalD45_temp1.txt','finalD45_temp2.txt','finalD45_temp3.txt']
+        lst_D4summary=['D4summary_temp1.txt','D4summary_temp2.txt','D4summary_temp3.txt']
+        lst_D5summary=['D5summary_temp1.txt','D5summary_temp2.txt','D5summary_temp3.txt']
+        
+        print("Starting Placing each channel in directory \n")
+        
+        
         for channelnum,channelname in enumerate(self.window.diff_tabs.channelnames):
             
             channelpath=pathlib.Path(self.dir_where_analy_happ.joinpath(channelname))
@@ -374,8 +450,131 @@ class Analysis():
             for file in glob.glob(str(pathlib.Path(self.dir_where_analy_happ).joinpath(pattern))):
                 shutil.copy(file,treatgchannelpath)
             
+            
+            print(f"Finished Placing channelnum {channelnum} in directory \n")
             #Now all the required files are present for treatg analysis folder
-            self.treatgsinglecycle()
+            
+            #self.treatgsinglecycle(treatgchannelpath)
+            print(f"Satarting Treatg Analysis channelnum  {channelnum}\n")
+            #simulating the situation of running the treatg software
+            from_file=pathlib.Path(self.window.diff_tabs.resourcelocation+"RESULT1.DAT")
+            shutil.copy(from_file,channelpath)    
+            from_file=pathlib.Path(self.window.diff_tabs.resourcelocation+"RESULT2.DAT")
+            shutil.copy(from_file,channelpath)   
+            from_file=pathlib.Path(self.window.diff_tabs.resourcelocation+"RESULT3.DAT")
+            shutil.copy(from_file,channelpath) 
+            
+            
+            #copy the excel files to the channel location 
+            for excelfile in lst_of_excelfiles:
+                from_file=pathlib.Path(self.window.diff_tabs.resourcelocation+excelfile)
+                shutil.copy(from_file,channelpath)    
+            
+            
+            
+        
+            print(f"Finished copying excel files\n")
+            #writing _33 information of the  channel into excel files
+            dir_for_analy=channelpath
+            #For all the files in the list writing 33 values in to the desired excel cells
+            for  excelfile, file33 in zip(lst_of_excelfiles,lstD4temp_33files):
+                            
+                df_temp_33=pd.read_csv(dir_for_analy.parent.joinpath(file33))
+                df_temp_33=df_temp_33.filter(like=lst_all101channels[channelnum])
+                for item in lst_ten_numbers:
+                    
+                    
+                    srcfile = openpyxl.load_workbook(dir_for_analy.joinpath(excelfile),read_only=False, keep_vba= True)#to open the excel sheet and if it has macros
+                    sheetname=srcfile["sheetsai"]
+                    sheetname.cell(row=item+4,column=3).value = df_temp_33.loc[item].values[0]#write to row 1,col 1 explicitly, this type of writing is useful to write something in loops
+                    name_file=excelfile.split(".")[0]+"_modified"+".xlsm"
+                srcfile.save(dir_for_analy.joinpath(name_file))#save it as a new file, the original file is untouched and here I am saving it as xlsm(m here denotes macros).
+                 
+            lst_of_xlsmfiles_modified=['(AS)_adj_param_m40_modified.xlsm','(AS)_adj_param_p70_modified.xlsm','(AS)_adj_param_p20_modified.xlsm']   
+            lstsix_numbers=list(range(0,6))
+            
+            
+            
+            #creating finalD45_temp1 2 and 3  files which contains  the desired six rows by six colummns that can be used in the program 
+            for finalfile,D4summ_file,D5summ_file in zip(lstfinalD45files,lst_D4summary,lst_D5summary):
+                df_D4summ=pd.read_csv(dir_for_analy.parent.joinpath(D4summ_file))
+                df_D5summ=pd.read_csv(dir_for_analy.parent.joinpath(D5summ_file))
+                df_D4_for_channel=df_D4summ.filter(like=lst_all101channels[channelnum])
+                df_D5_for_channel=df_D5summ.filter(like=lst_all101channels[channelnum])
+                df_D45_for_channel=pd.concat([df_D4_for_channel,df_D5_for_channel],axis=1)
+                df_D45_for_channel.to_csv(dir_for_analy.joinpath(finalfile),index=False)
+            
+            
+            #For all the files in the list writing D45 values in to the desired excel cells
+            for  xlsmfile,fileD45 in zip(lst_of_xlsmfiles_modified,lstfinalD45files):
+                
+                df_temp_45=pd.read_csv(dir_for_analy.joinpath(fileD45))
+                df_temp_45=df_temp_45.filter(like=lst_all101channels[channelnum])
+                for rows in lstsix_numbers:
+                    for columns in lstsix_numbers:
+                    
+                        
+                        
+                        
+                        srcfile = openpyxl.load_workbook(dir_for_analy.joinpath(xlsmfile),read_only=False, keep_vba= True)#to open the excel sheet and if it has macros
+                        sheetname=srcfile["sheetsai"]
+                        sheetname.cell(row=rows+19,column=columns+2).value = df_temp_45.iloc[rows,columns] #write to row 1,col 1 explicitly, this type of writing is useful to write something in loops
+                srcfile.save(dir_for_analy.joinpath(channelname+xlsmfile))
+                
+            #Now that the desired excel files are written deleting the extra unnecessary files 
+            
+            for file1,file2 in zip(lst_of_excelfiles,lst_of_xlsmfiles_modified):
+                file_to_rem = dir_for_analy.joinpath(file1)
+                file_to_rem.unlink()
+                file_to_rem = dir_for_analy.joinpath(file2)
+                file_to_rem.unlink()
+            
+            #Makng the desired array as the input for matlab conversion program
+            #df_for_matlab=df_temp_33=pd.read_csv(dir_for_analy.joinpath("raw_text_D4_1_33.txt"),header=None)
+            #I think temp3 d4 first two columns
+            df_for_matlab=pd.read_csv(dir_for_analy.joinpath('finalD45_temp3.txt'))
+            desired_matrix=df_for_matlab.iloc[:,0:2].values
+            
+            #copying sample1.csv and sample2.csv into  respective channel folders
+            #Also copied the endurance files also
+            reqfiles=["sample1.csv","sample2.csv","endu_sample1.csv","endu_sample2.csv","endu_sample3.csv"]
+            for file in reqfiles:
+                from_file=pathlib.Path(self.window.diff_tabs.resourcelocation+file)
+                shutil.copy(from_file,dir_for_analy)
+            
+            
+            
+           
+            
+            #Calling the matlab conversion program
+            matlab_conver_func(desired_matrix,dir_for_analy,channelname)
+            
+        
+            #Calling the endurance test program
+            df_endu=pd.read_csv(dir_for_analy.parent.joinpath('raw_text_D6.txt'))
+            df_endu_channels=df_endu[[ lstchannels[channelnum*2],lstchannels[channelnum*2+1]  ]]
+            endurance_test(df_endu_channels,dir_for_analy,channelname)
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+#            dfD4summary_temp1=pd.read_csv(self.dir_where_analy_happ.joinpath('D4summary_temp1.txt'))
+#            
+#            #dfD4summary_temp1.filter(like="101 (VDC)")
+#            dfD4summary_temp1.filter(like=lst_all101channels[channelnum])
+            
+            
 
 
 
@@ -577,6 +776,10 @@ class Analysis():
         lstchannels=lst_channels101_to_106+lst_channels108_to_116
         lst_all101channels=lstchannels[0::2]
         
+        D4summary_temp1.filter(like="101 (VDC)")
+        
+        
+        
         print("Preparing files for the TreatG software.. D45...This takes a minute...\n")
         
         
@@ -638,7 +841,12 @@ class Analysis():
         #list of all the channels
         lstchannels=lst_channels101_to_106+lst_channels108_to_116
         
-        print("Preparing files for the TreatG software.. L123...This takes a minute...\n")
+        
+        print(f"The analysis happens in {self.dir_where_analy_happ}")
+        for i,j in zip(lstrawtext,lst_treatg_input):
+            print(i,j)
+        
+        print("Preparing files for the TreatG software.. L123...This takes upto 5  minutes...\n")
         #knowing the number of channels from the column number of 201
         #Based on that the number of channels can be infered
         #Now only these many number of channel files shall be created 
@@ -677,83 +885,83 @@ class Analysis():
         print("Finished Preparing files for treatg L123...\n")   
         
         
-        def preparing_reports(self):
+    def preparing_reports(self,dir_for_analy):
+        
+#        lstresult_files=['RESULT1.DAT','RESULT2.DAT','RESULT3.DAT']
+#        lstfinalD45files=['finalD45_temp1.txt','finalD45_temp2.txt','finalD45_temp3.txt']        
+        lstD4temp_33files=['raw_text_D4_1_33.txt','raw_text_D4_2_33.txt','raw_text_D4_3_33.txt']
+#        listof_filesrequired=lstresult_files+lstfinalD45files+lstD4temp_33files
+#        #printing all the required file names 
+#        for item in listof_filesrequired:
+#            print(item) 
+#            
+#        
+#          
+#        #For checking if all the required files are present, if not the program exits
+#        for item in listof_filesrequired:
+#            self.checkfileexists(dir_for_analy.joinpath(item))
+#        
+        
             
-            lstresult_files=['RESULT1.DAT','RESULT2.DAT','RESULT3.DAT']
-            lstfinalD45files=['finalD45_temp1.txt','finalD45_temp2.txt','finalD45_temp3.txt']        
-            lstD4temp_33files=['raw_text_D4_1_33.txt','raw_text_D4_2_33.txt','raw_text_D4_3_33.txt']
-            listof_filesrequired=lstresult_files+lstfinalD45files+lstD4temp_33files
-            #printing all the required file names 
-            for item in listof_filesrequired:
-                print(item) 
+        lst_of_excelfiles=['(AS)_adj_param_m40.xlsx','(AS)_adj_param_p70.xlsx','(AS)_adj_param_p20.xlsx']
+        
+        
+        #g_sheet=srcfile.sheetnames
+        
+        #sheetname = srcfile.get_sheet_by_name('sheetsai')#get sheetname from the file
+        #sheetname['C4']= 55.568 #write something in B2 cell of the supplied sheet
+        
+        lst_ten_numbers=list(range(0,10))
+        
+        
+        #For all the files in the list writing 33 values in to the desired excel cells
+        for  excelfile, file33 in zip(lst_of_excelfiles,lstD4temp_33files):
+            for num in lst_ten_numbers:
                 
-            
-              
-            #For checking if all the required files are present, if not the program exits
-            for item in listof_filesrequired:
-                self.checkfileexists(dir_for_analy.joinpath(item))
-            
-            
                 
-            lst_of_excelfiles=['(AS)_adj_param_m40.xlsx','(AS)_adj_param_p70.xlsx','(AS)_adj_param_p20.xlsx']
-            
-            
-            #g_sheet=srcfile.sheetnames
-            
-            #sheetname = srcfile.get_sheet_by_name('sheetsai')#get sheetname from the file
-            #sheetname['C4']= 55.568 #write something in B2 cell of the supplied sheet
-            
-            lst_ten_numbers=list(range(0,10))
-            
-            
-            #For all the files in the list writing 33 values in to the desired excel cells
-            for  excelfile, file33 in zip(lst_of_excelfiles,lstD4temp_33files):
-                for num in lst_ten_numbers:
+                df_temp_33=pd.read_csv(dir_for_analy.joinpath(file33),header=None)
+                
+                srcfile = openpyxl.load_workbook(dir_for_analy.joinpath(excelfile),read_only=False, keep_vba= True)#to open the excel sheet and if it has macros
+                sheetname=srcfile["sheetsai"]
+                sheetname.cell(row=item+4,column=3).value = df_temp_33.loc[item,0] #write to row 1,col 1 explicitly, this type of writing is useful to write something in loops
+            srcfile.save(dir_for_analy.joinpath(excelfile.split(".")[0]+"_modified"+".xlsm"))#save it as a new file, the original file is untouched and here I am saving it as xlsm(m here denotes macros).
+             
+        lst_of_xlsmfiles_modified=['(AS)_adj_param_m40_modified.xlsm','(AS)_adj_param_p70_modified.xlsm','(AS)_adj_param_p20_modified.xlsm']   
+        lstsix_numbers=list(range(0,6))
+        
+        #For all the files in the list writing D45 values in to the desired excel cells
+        for  xlsmfile,fileD45 in zip(lst_of_xlsmfiles_modified,lstD4temp_33files):
+            for rows in lstsix_numbers:
+                for columns in lstsix_numbers:
+                
                     
+                    df_temp_45=pd.read_csv(dir_for_analy.joinpath(fileD45),header=None)
                     
-                    df_temp_33=pd.read_csv(dir_for_analy.joinpath(file33),header=None)
-                    
-                    srcfile = openpyxl.load_workbook(dir_for_analy.joinpath(excelfile),read_only=False, keep_vba= True)#to open the excel sheet and if it has macros
+                    srcfile = openpyxl.load_workbook(dir_for_analy.joinpath(xlsmfile),read_only=False, keep_vba= True)#to open the excel sheet and if it has macros
                     sheetname=srcfile["sheetsai"]
-                    sheetname.cell(row=item+4,column=3).value = df_temp_33.loc[item,0] #write to row 1,col 1 explicitly, this type of writing is useful to write something in loops
-                srcfile.save(dir_for_analy.joinpath(excelfile.split(".")[0]+"_modified"+".xlsm"))#save it as a new file, the original file is untouched and here I am saving it as xlsm(m here denotes macros).
-                 
-            lst_of_xlsmfiles_modified=['(AS)_adj_param_m40_modified.xlsm','(AS)_adj_param_p70_modified.xlsm','(AS)_adj_param_p20_modified.xlsm']   
-            lstsix_numbers=list(range(0,6))
+                    sheetname.cell(row=rows+19,column=columns+2).value = df_temp_45.loc[rows,columns] #write to row 1,col 1 explicitly, this type of writing is useful to write something in loops
+            srcfile.save(dir_for_analy.joinpath(sensorname+xlsmfile))
             
-            #For all the files in the list writing D45 values in to the desired excel cells
-            for  xlsmfile,fileD45 in zip(lst_of_xlsmfiles_modified,lstD4temp_33files):
-                for rows in lstsix_numbers:
-                    for columns in lstsix_numbers:
-                    
-                        
-                        df_temp_45=pd.read_csv(dir_for_analy.joinpath(fileD45),header=None)
-                        
-                        srcfile = openpyxl.load_workbook(dir_for_analy.joinpath(xlsmfile),read_only=False, keep_vba= True)#to open the excel sheet and if it has macros
-                        sheetname=srcfile["sheetsai"]
-                        sheetname.cell(row=rows+19,column=columns+2).value = df_temp_45.loc[rows,columns] #write to row 1,col 1 explicitly, this type of writing is useful to write something in loops
-                srcfile.save(dir_for_analy.joinpath(sensorname+xlsmfile))
-                
-            #Now that the desired excel files are written deleting the extra unnecessary files 
-            
-            for file1,file2 in zip(lst_of_excelfiles,lst_of_xlsmfiles_modified):
-                file_to_rem = dir_for_analy.joinpath(file1)
-                file_to_rem.unlink()
-                file_to_rem = dir_for_analy.joinpath(file2)
-                file_to_rem.unlink()
-            
-            #Makng the desired array as the input for matlab conversion program
-            df_for_matlab=df_temp_33=pd.read_csv(dir_for_analy.joinpath("raw_text_D4_1_33.txt"),header=None)
-            desired_matrix=df_for_matlab.iloc[:,0:2].values
-            
-            
-            #Calling the matlab conversion program
-            matlab_conver_func(desired_matrix,dir_for_analy,sensorname)
-            
+        #Now that the desired excel files are written deleting the extra unnecessary files 
+        
+        for file1,file2 in zip(lst_of_excelfiles,lst_of_xlsmfiles_modified):
+            file_to_rem = dir_for_analy.joinpath(file1)
+            file_to_rem.unlink()
+            file_to_rem = dir_for_analy.joinpath(file2)
+            file_to_rem.unlink()
+        
+        #Makng the desired array as the input for matlab conversion program
+        df_for_matlab=df_temp_33=pd.read_csv(dir_for_analy.joinpath("raw_text_D4_1_33.txt"),header=None)
+        desired_matrix=df_for_matlab.iloc[:,0:2].values
         
         
+        #Calling the matlab conversion program
+        matlab_conver_func(desired_matrix,dir_for_analy,sensorname)
         
-        
+    
+    
+    
+    
         
         
                 
