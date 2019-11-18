@@ -15,12 +15,14 @@ from pywinauto.controls.common_controls import TabControlWrapper
 from pywinauto.keyboard import send_keys, KeySequenceError
 import glob
 
+
+
 from matlabconversionprog import matlab_conver_func,endurance_test
 from threading import Thread, Lock
 _db_lock = Lock() 
 
 from concurrent import futures
-import time
+
 import functools
 import multiprocessing  
 thread_pool_executor = futures.ThreadPoolExecutor(max_workers=1)
@@ -28,12 +30,12 @@ thread_pool_executor = futures.ThreadPoolExecutor(max_workers=1)
 
 def tk_after(target):
  
-        @functools.wraps(target)
-        def wrapper(self, *args, **kwargs):
-            args = (self,) + args
-            self.window.master.after(0, target, *args, **kwargs)
-     
-        return wrapper
+    @functools.wraps(target)
+    def wrapper(self, *args, **kwargs):
+        args = (self,) + args
+        self.window.master.after(0, target, *args, **kwargs)
+ 
+    return wrapper
  
  
 def submit_to_pool_executor(executor):
@@ -252,32 +254,32 @@ class Analysis():
         #INTERNAL when the file location can be got from the runs
         if self.window.diff_tabs.analysiscombo.get() == "Internal":
             dir_to_check=self.window.diff_tabs.base_folder
-            sensorname=self.window.diff_tabs.sensor_input_set
+#            sensorname=self.window.diff_tabs.sensor_input_set
             
         else:
             chosenfile=pathlib.Path(self.window.diff_tabs.defaultlocation)
-            dir_to_check=chosenfile.parent
-            
+            dir_to_check=str(chosenfile.parent)+"\\"
+            print(dir_to_check)
        
         #For checking if all the required files are present, if not the program exits
         for item in self.window.diff_tabs.ones_days:
 
 
 
-            if self.window.diff_tabs.comboday_set == 'L1':
+            if item == 'L1':
     
                 self.checkfileexists(dir_to_check+'raw_text_L1.txt')
     
     
-            elif self.window.diff_tabs.comboday_set == 'L2':
+            elif item == 'L2':
                 self.checkfileexists(dir_to_check+'raw_text_L2.txt')
                 
     
-            elif self.window.diff_tabs.comboday_set == 'L3':
+            elif item == 'L3':
                 self.checkfileexists(dir_to_check+'raw_text_L3.txt')
     
     
-            elif self.window.diff_tabs.comboday_set == 'D4':
+            elif item == 'D4':
                 self.checkfileexists(dir_to_check+'D4summary_temp1.txt')
                 self.checkfileexists(dir_to_check+'D4summary_temp2.txt')
                 self.checkfileexists(dir_to_check+'D4summary_temp3.txt')
@@ -285,13 +287,13 @@ class Analysis():
                 self.checkfileexists(dir_to_check+'raw_text_D4_2_33.txt')
                 self.checkfileexists(dir_to_check+'raw_text_D4_3_33.txt')
                 
-            elif (self.window.diff_tabs.comboday_set == 'D5' ):
+            elif (item == 'D5' ):
                 self.checkfileexists(dir_to_check+'D5summary_temp1.txt')
                 self.checkfileexists(dir_to_check+'D5summary_temp2.txt')
                 self.checkfileexists(dir_to_check+'D5summary_temp3.txt')
                 
                     
-            elif (self.window.diff_tabs.comboday_set == 'D6' ):
+            elif (item == 'D6' ):
                 self.checkfileexists(dir_to_check+'raw_text_D6.txt')
             else:
                 print("\n")
@@ -300,10 +302,10 @@ class Analysis():
             
         #concatenating all the names of the days that need to be analyzed    
         if len(self.window.diff_tabs.ones_days)>0:
-           seperator = '_'
-           dir_name_analysis="analysis"+seperator.join(self.window.diff_tabs.ones_days)
+            seperator = '_'
+            dir_name_analysis="analysis"+seperator.join(self.window.diff_tabs.ones_days)
         else:
-           dir_name_analysis="complete_dummy"
+            dir_name_analysis="complete_dummy"
            
         
         
@@ -320,39 +322,39 @@ class Analysis():
             if comboday=="L1":
                 reqfiles=['raw_text_L1.txt']
                 for file in reqfiles:
-                    from_file=pathlib.Path(dir_to_check.joinpath(file))
+                    from_file=pathlib.Path(dir_to_check).joinpath(file)
                     to_file=pathlib.Path(self.dir_where_analy_happ.joinpath(file))
                     shutil.copy(from_file,to_file)
             elif comboday=="L2":
                 reqfiles=['raw_text_L2.txt']
                 for file in reqfiles:
-                    from_file=pathlib.Path(dir_to_check.joinpath(file))
+                    from_file=pathlib.Path(dir_to_check).joinpath(file)
                     to_file=pathlib.Path(self.dir_where_analy_happ.joinpath(file))
                     shutil.copy(from_file,to_file)
             elif  comboday=="L3":
                 reqfiles=['raw_text_L3.txt']
                 for file in reqfiles:
-                    from_file=pathlib.Path(dir_to_check.joinpath(file))
+                    from_file=pathlib.Path(dir_to_check).joinpath(file)
                     to_file=pathlib.Path(self.dir_where_analy_happ.joinpath(file))
                     shutil.copy(from_file,to_file)
                 
             elif  comboday=="D4":
                 reqfiles=['D4summary_temp1.txt','D4summary_temp2.txt','D4summary_temp3.txt','raw_text_D4_1_33.txt','raw_text_D4_2_33.txt','raw_text_D4_3_33.txt']
                 for file in reqfiles:
-                    from_file=pathlib.Path(dir_to_check.joinpath(file))
+                    from_file=pathlib.Path(dir_to_check).joinpath(file)
                     to_file=pathlib.Path(self.dir_where_analy_happ.joinpath(file))
                     shutil.copy(from_file,to_file)
             elif comboday=="D5":
                 reqfiles=['D5summary_temp1.txt','D5summary_temp2.txt','D5summary_temp3.txt']
                 for file in reqfiles:
-                    from_file=pathlib.Path(dir_to_check.joinpath(file))
+                    from_file=pathlib.Path(dir_to_check).joinpath(file)
                     to_file=pathlib.Path(self.dir_where_analy_happ.joinpath(file))
                     shutil.copy(from_file,to_file)
                 
             elif comboday=="D6":
                 reqfiles=['raw_text_D6.txt']
                 for file in reqfiles:
-                    from_file=pathlib.Path(dir_to_check.joinpath(file))
+                    from_file=pathlib.Path(dir_to_check).joinpath(file)
                     to_file=pathlib.Path(self.dir_where_analy_happ.joinpath(file))
                     shutil.copy(from_file,to_file)
            
@@ -537,7 +539,8 @@ class Analysis():
             
             #copying sample1.csv and sample2.csv into  respective channel folders
             #Also copied the endurance files also
-            reqfiles=["sample1.csv","sample2.csv","endu_sample1.csv","endu_sample2.csv","endu_sample3.csv"]
+            #Also copied origin file
+            reqfiles=["sample1.csv","sample2.csv","endu_sample1.csv","endu_sample2.csv","endu_sample3.csv",'Origin_After_Stabilization.OPJ']
             for file in reqfiles:
                 from_file=pathlib.Path(self.window.diff_tabs.resourcelocation+file)
                 shutil.copy(from_file,dir_for_analy)
@@ -545,16 +548,17 @@ class Analysis():
             
             
            
-            
+            print("Starting Matlab_conversion program for making conformance {channelnum} \n")
             #Calling the matlab conversion program
             matlab_conver_func(desired_matrix,dir_for_analy,channelname)
             
-        
+            print("Starting Endurance report program \n")
             #Calling the endurance test program
             df_endu=pd.read_csv(dir_for_analy.parent.joinpath('raw_text_D6.txt'))
             df_endu_channels=df_endu[[ lstchannels[channelnum*2],lstchannels[channelnum*2+1]  ]]
             endurance_test(df_endu_channels,dir_for_analy,channelname)
             
+            print("Completed Analysis.. Thanks for your patience\n")
             
             
             
@@ -602,9 +606,9 @@ class Analysis():
         df_finalD45_temp3.to_csv('finalD45_temp3.txt',index=False)
         
         
-        dfD4_temp1_pos33=pd.read_csv('raw_text_D4_1_33.txt')
-        dfD4_temp2_pos33=pd.read_csv('raw_text_D4_2_33.txt')
-        dfD4_temp3_pos33=pd.read_csv('raw_text_D4_3_33.txt')
+#        dfD4_temp1_pos33=pd.read_csv('raw_text_D4_1_33.txt')
+#        dfD4_temp2_pos33=pd.read_csv('raw_text_D4_2_33.txt')
+#        dfD4_temp3_pos33=pd.read_csv('raw_text_D4_3_33.txt')
 
 
 
@@ -750,69 +754,72 @@ class Analysis():
         
 
     
-        
-            
-    def Dividing_into_channelsD45(self):
-        
-        
-        
-        
-        #list of all raw text files from all the days
-        lstrawtextwithoutpath=['D4summary_temp1.txt','D4summary_temp2.txt','D4summary_temp3.txt','D5summary_temp1.txt','D5summary_temp2.txt','D5summary_temp3.txt']
-        lstrawtext=list(map(lambda x:str(self.dir_where_analy_happ.joinpath(x)),lstrawtextwithoutpath))
-        
-        #list of all the output files it needs to make
-        
-        
-        
-        d4input_withoutpath=[self.window.diff_tabs.sensor_input_set+"D4summary_temp1","1_"+self.window.diff_tabs.sensor_input_set+"D4summary_temp2","1_"+self.window.diff_tabs.sensor_input_set+"D4summary_temp3"]
-        lst_treatg_input=list(map(lambda x:str(self.dir_where_analy_happ.joinpath(x)),lst_treatg_input_withoutpath))
-        
-        
-        
-        lst_channels101_to_106=["101 (VDC)","201 (VDC)","102 (VDC)","202 (VDC)","103 (VDC)","203 (VDC)","104 (VDC)","204 (VDC)","105 (VDC)","205 (VDC)","106 (VDC)","206 (VDC)","107 (VDC)","207 (VDC)","108 (VDC)","208 (VDC)"]
-        lst_channels108_to_116=["109 (VDC)","209 (VDC)","110 (VDC)","210 (VDC)","111 (VDC)","211 (VDC)","112 (VDC)","212 (VDC)","113 (VDC)","213 (VDC)","114 (VDC)","214 (VDC)","115 (VDC)","215 (VDC)","116 (VDC)","216 (VDC)"]
-        #list of all the channels
-        lstchannels=lst_channels101_to_106+lst_channels108_to_116
-        lst_all101channels=lstchannels[0::2]
-        
-        D4summary_temp1.filter(like="101 (VDC)")
-        
-        
-        
-        print("Preparing files for the TreatG software.. D45...This takes a minute...\n")
-        
-        
-        channels=self.window.diff_tabs.no_channels
-        #Writing heading to all the files L1, L2,L3 with all the channel numbers so that 
-        #nextpart can append these files.The files will be L1_1 L1_2 till L1_channelnumber L2_channelnumber
-        #L3_channelnumber
-        for inputtreatg in lst_treatg_input:
-            for channelnum in range(0,channels):
-                with open(inputtreatg+"_"+str(channelnum+1), 'w') as f:
-                    f.write(' pos  uacc     Rts\n')
-        #This is the main part of the program
-                    
-         
-        for rawtext_day,inputtreatg in zip(lstrawtext,lst_treatg_input):
-            dfL1= pd.read_csv(rawtext_day)
-            #This for loop chooses the 4 rows, then the interchange among them happens in the desired order
-            #order from 1423 to 1234
-            for chose4rowspanda in range(0,((self.window.diff_tabs.tempruns_set*4)-3),4):
-                dfL1temp=dfL1.loc[chose4rowspanda:chose4rowspanda+3,:]
-                b,c,d=dfL1temp.iloc[1,:].copy(),dfL1temp.iloc[2,:].copy(),dfL1temp.iloc[3,:].copy()
-                dfL1temp.iloc[1,:],dfL1temp.iloc[2,:],dfL1temp.iloc[3,:]=c,d,b
-                #for every channel selected, we have to assign the correct column names
-                #It is like selecting a matrix using rows and columns channel number  gets the column name from the list
-                for channelnum in range(0,channels):
-                    with open(inputtreatg+"_"+str(channelnum+1)+".DAT", 'a') as f:
-                        for rows in range(0,4):
-                            f.write('  {0} {1:.6f}  {2:.4f}\n'.format(rows+1,dfL1temp[lstchannels[2*channelnum]].iloc[rows],dfL1temp[lstchannels[2*channelnum+1]].iloc[rows]))
-        
-        
-        
-        print("Finished Preparing files for treatg L123...\n")   
-        
+#        
+#            
+#    def Dividing_into_channelsD45(self):
+#        
+#        
+#        
+#        
+#        #list of all raw text files from all the days
+#        lstrawtextwithoutpath=['D4summary_temp1.txt','D4summary_temp2.txt','D4summary_temp3.txt','D5summary_temp1.txt','D5summary_temp2.txt','D5summary_temp3.txt']
+#        lstrawtext=list(map(lambda x:str(self.dir_where_analy_happ.joinpath(x)),lstrawtextwithoutpath))
+#        
+#        #list of all the output files it needs to make
+#        
+#        
+#        
+#        d4input_withoutpath=[self.window.diff_tabs.sensor_input_set+"D4summary_temp1","1_"+self.window.diff_tabs.sensor_input_set+"D4summary_temp2","1_"+self.window.diff_tabs.sensor_input_set+"D4summary_temp3"]
+#        lst_treatg_input=list(map(lambda x:str(self.dir_where_analy_happ.joinpath(x)),d4input_withoutpath))
+#        
+#        
+#        
+#        lst_channels101_to_106=["101 (VDC)","201 (VDC)","102 (VDC)","202 (VDC)","103 (VDC)","203 (VDC)","104 (VDC)","204 (VDC)","105 (VDC)","205 (VDC)","106 (VDC)","206 (VDC)","107 (VDC)","207 (VDC)","108 (VDC)","208 (VDC)"]
+#        lst_channels108_to_116=["109 (VDC)","209 (VDC)","110 (VDC)","210 (VDC)","111 (VDC)","211 (VDC)","112 (VDC)","212 (VDC)","113 (VDC)","213 (VDC)","114 (VDC)","214 (VDC)","115 (VDC)","215 (VDC)","116 (VDC)","216 (VDC)"]
+#        #list of all the channels
+#        lstchannels=lst_channels101_to_106+lst_channels108_to_116
+#        lst_all101channels=lstchannels[0::2]
+#        
+#        
+#        
+#        
+#        D4summary_temp1.filter(like="101 (VDC)")
+#        
+#        
+#        
+#        print("Preparing files for the TreatG software.. D45...This takes a minute...\n")
+#        
+#        
+#        channels=self.window.diff_tabs.no_channels
+#        #Writing heading to all the files L1, L2,L3 with all the channel numbers so that 
+#        #nextpart can append these files.The files will be L1_1 L1_2 till L1_channelnumber L2_channelnumber
+#        #L3_channelnumber
+#        for inputtreatg in lst_treatg_input:
+#            for channelnum in range(0,channels):
+#                with open(inputtreatg+"_"+str(channelnum+1), 'w') as f:
+#                    f.write(' pos  uacc     Rts\n')
+#        #This is the main part of the program
+#                    
+#         
+#        for rawtext_day,inputtreatg in zip(lstrawtext,lst_treatg_input):
+#            dfL1= pd.read_csv(rawtext_day)
+#            #This for loop chooses the 4 rows, then the interchange among them happens in the desired order
+#            #order from 1423 to 1234
+#            for chose4rowspanda in range(0,((self.window.diff_tabs.tempruns_set*4)-3),4):
+#                dfL1temp=dfL1.loc[chose4rowspanda:chose4rowspanda+3,:]
+#                b,c,d=dfL1temp.iloc[1,:].copy(),dfL1temp.iloc[2,:].copy(),dfL1temp.iloc[3,:].copy()
+#                dfL1temp.iloc[1,:],dfL1temp.iloc[2,:],dfL1temp.iloc[3,:]=c,d,b
+#                #for every channel selected, we have to assign the correct column names
+#                #It is like selecting a matrix using rows and columns channel number  gets the column name from the list
+#                for channelnum in range(0,channels):
+#                    with open(inputtreatg+"_"+str(channelnum+1)+".DAT", 'a') as f:
+#                        for rows in range(0,4):
+#                            f.write('  {0} {1:.6f}  {2:.4f}\n'.format(rows+1,dfL1temp[lstchannels[2*channelnum]].iloc[rows],dfL1temp[lstchannels[2*channelnum+1]].iloc[rows]))
+#        
+#        
+#        
+#        print("Finished Preparing files for treatg L123...\n")   
+#        
 
 
 
@@ -884,83 +891,83 @@ class Analysis():
         
         print("Finished Preparing files for treatg L123...\n")   
         
-        
-    def preparing_reports(self,dir_for_analy):
-        
-#        lstresult_files=['RESULT1.DAT','RESULT2.DAT','RESULT3.DAT']
-#        lstfinalD45files=['finalD45_temp1.txt','finalD45_temp2.txt','finalD45_temp3.txt']        
-        lstD4temp_33files=['raw_text_D4_1_33.txt','raw_text_D4_2_33.txt','raw_text_D4_3_33.txt']
-#        listof_filesrequired=lstresult_files+lstfinalD45files+lstD4temp_33files
-#        #printing all the required file names 
-#        for item in listof_filesrequired:
-#            print(item) 
+#        
+#    def preparing_reports(self,dir_for_analy):
+#        
+##        lstresult_files=['RESULT1.DAT','RESULT2.DAT','RESULT3.DAT']
+##        lstfinalD45files=['finalD45_temp1.txt','finalD45_temp2.txt','finalD45_temp3.txt']        
+#        lstD4temp_33files=['raw_text_D4_1_33.txt','raw_text_D4_2_33.txt','raw_text_D4_3_33.txt']
+##        listof_filesrequired=lstresult_files+lstfinalD45files+lstD4temp_33files
+##        #printing all the required file names 
+##        for item in listof_filesrequired:
+##            print(item) 
+##            
+##        
+##          
+##        #For checking if all the required files are present, if not the program exits
+##        for item in listof_filesrequired:
+##            self.checkfileexists(dir_for_analy.joinpath(item))
+##        
+#        
 #            
+#        lst_of_excelfiles=['(AS)_adj_param_m40.xlsx','(AS)_adj_param_p70.xlsx','(AS)_adj_param_p20.xlsx']
 #        
-#          
-#        #For checking if all the required files are present, if not the program exits
-#        for item in listof_filesrequired:
-#            self.checkfileexists(dir_for_analy.joinpath(item))
 #        
-        
-            
-        lst_of_excelfiles=['(AS)_adj_param_m40.xlsx','(AS)_adj_param_p70.xlsx','(AS)_adj_param_p20.xlsx']
-        
-        
-        #g_sheet=srcfile.sheetnames
-        
-        #sheetname = srcfile.get_sheet_by_name('sheetsai')#get sheetname from the file
-        #sheetname['C4']= 55.568 #write something in B2 cell of the supplied sheet
-        
-        lst_ten_numbers=list(range(0,10))
-        
-        
-        #For all the files in the list writing 33 values in to the desired excel cells
-        for  excelfile, file33 in zip(lst_of_excelfiles,lstD4temp_33files):
-            for num in lst_ten_numbers:
-                
-                
-                df_temp_33=pd.read_csv(dir_for_analy.joinpath(file33),header=None)
-                
-                srcfile = openpyxl.load_workbook(dir_for_analy.joinpath(excelfile),read_only=False, keep_vba= True)#to open the excel sheet and if it has macros
-                sheetname=srcfile["sheetsai"]
-                sheetname.cell(row=item+4,column=3).value = df_temp_33.loc[item,0] #write to row 1,col 1 explicitly, this type of writing is useful to write something in loops
-            srcfile.save(dir_for_analy.joinpath(excelfile.split(".")[0]+"_modified"+".xlsm"))#save it as a new file, the original file is untouched and here I am saving it as xlsm(m here denotes macros).
-             
-        lst_of_xlsmfiles_modified=['(AS)_adj_param_m40_modified.xlsm','(AS)_adj_param_p70_modified.xlsm','(AS)_adj_param_p20_modified.xlsm']   
-        lstsix_numbers=list(range(0,6))
-        
-        #For all the files in the list writing D45 values in to the desired excel cells
-        for  xlsmfile,fileD45 in zip(lst_of_xlsmfiles_modified,lstD4temp_33files):
-            for rows in lstsix_numbers:
-                for columns in lstsix_numbers:
-                
-                    
-                    df_temp_45=pd.read_csv(dir_for_analy.joinpath(fileD45),header=None)
-                    
-                    srcfile = openpyxl.load_workbook(dir_for_analy.joinpath(xlsmfile),read_only=False, keep_vba= True)#to open the excel sheet and if it has macros
-                    sheetname=srcfile["sheetsai"]
-                    sheetname.cell(row=rows+19,column=columns+2).value = df_temp_45.loc[rows,columns] #write to row 1,col 1 explicitly, this type of writing is useful to write something in loops
-            srcfile.save(dir_for_analy.joinpath(sensorname+xlsmfile))
-            
-        #Now that the desired excel files are written deleting the extra unnecessary files 
-        
-        for file1,file2 in zip(lst_of_excelfiles,lst_of_xlsmfiles_modified):
-            file_to_rem = dir_for_analy.joinpath(file1)
-            file_to_rem.unlink()
-            file_to_rem = dir_for_analy.joinpath(file2)
-            file_to_rem.unlink()
-        
-        #Makng the desired array as the input for matlab conversion program
-        df_for_matlab=df_temp_33=pd.read_csv(dir_for_analy.joinpath("raw_text_D4_1_33.txt"),header=None)
-        desired_matrix=df_for_matlab.iloc[:,0:2].values
-        
-        
-        #Calling the matlab conversion program
-        matlab_conver_func(desired_matrix,dir_for_analy,sensorname)
-        
-    
-    
-    
+#        #g_sheet=srcfile.sheetnames
+#        
+#        #sheetname = srcfile.get_sheet_by_name('sheetsai')#get sheetname from the file
+#        #sheetname['C4']= 55.568 #write something in B2 cell of the supplied sheet
+#        
+#        lst_ten_numbers=list(range(0,10))
+#        
+#        
+#        #For all the files in the list writing 33 values in to the desired excel cells
+#        for  excelfile, file33 in zip(lst_of_excelfiles,lstD4temp_33files):
+#            for num in lst_ten_numbers:
+#                
+#                
+#                df_temp_33=pd.read_csv(dir_for_analy.joinpath(file33),header=None)
+#                
+#                srcfile = openpyxl.load_workbook(dir_for_analy.joinpath(excelfile),read_only=False, keep_vba= True)#to open the excel sheet and if it has macros
+#                sheetname=srcfile["sheetsai"]
+#                sheetname.cell(row=item+4,column=3).value = df_temp_33.loc[item,0] #write to row 1,col 1 explicitly, this type of writing is useful to write something in loops
+#            srcfile.save(dir_for_analy.joinpath(excelfile.split(".")[0]+"_modified"+".xlsm"))#save it as a new file, the original file is untouched and here I am saving it as xlsm(m here denotes macros).
+#             
+#        lst_of_xlsmfiles_modified=['(AS)_adj_param_m40_modified.xlsm','(AS)_adj_param_p70_modified.xlsm','(AS)_adj_param_p20_modified.xlsm']   
+#        lstsix_numbers=list(range(0,6))
+#        
+#        #For all the files in the list writing D45 values in to the desired excel cells
+#        for  xlsmfile,fileD45 in zip(lst_of_xlsmfiles_modified,lstD4temp_33files):
+#            for rows in lstsix_numbers:
+#                for columns in lstsix_numbers:
+#                
+#                    
+#                    df_temp_45=pd.read_csv(dir_for_analy.joinpath(fileD45),header=None)
+#                    
+#                    srcfile = openpyxl.load_workbook(dir_for_analy.joinpath(xlsmfile),read_only=False, keep_vba= True)#to open the excel sheet and if it has macros
+#                    sheetname=srcfile["sheetsai"]
+#                    sheetname.cell(row=rows+19,column=columns+2).value = df_temp_45.loc[rows,columns] #write to row 1,col 1 explicitly, this type of writing is useful to write something in loops
+#            srcfile.save(dir_for_analy.joinpath(sensorname+xlsmfile))
+#            
+#        #Now that the desired excel files are written deleting the extra unnecessary files 
+#        
+#        for file1,file2 in zip(lst_of_excelfiles,lst_of_xlsmfiles_modified):
+#            file_to_rem = dir_for_analy.joinpath(file1)
+#            file_to_rem.unlink()
+#            file_to_rem = dir_for_analy.joinpath(file2)
+#            file_to_rem.unlink()
+#        
+#        #Makng the desired array as the input for matlab conversion program
+#        df_for_matlab=df_temp_33=pd.read_csv(dir_for_analy.joinpath("raw_text_D4_1_33.txt"),header=None)
+#        desired_matrix=df_for_matlab.iloc[:,0:2].values
+#        
+#        
+#        #Calling the matlab conversion program
+#        matlab_conver_func(desired_matrix,dir_for_analy,sensorname)
+#        
+#    
+#    
+#    
     
         
         

@@ -4,13 +4,18 @@ Created on Sat Aug 17 15:10:59 2019
 
 @author: sairamtvv
 """
-
+import time
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import pathlib
 import docx
 from docx.shared import Cm, Inches,Length
+import os
+
+import OriginExt
+import win32com.client
+import subprocess
 
 b = np.array( [[-372.675,372.434],[-372.671,372.437],[-372.669,372.435],
   [-372.665,372.435],[-372.666,372.436],[-372.665,372.439]])
@@ -579,7 +584,110 @@ def matlab_conver_func (a,dir_for_analy,sensor_name):
     # save the doc
     doc.save(dir_for_analy.joinpath('conform_'+sensor_name+'.docx'))
     
-    plotting_graph(dir_for_analy,sensor_name)
+    
+    print("Starting the plotting program in matplotlib\n")
+    matplotplibplotting_graph(dir_for_analy,sensor_name)
+    
+    
+    print("Starting the plotting program in Origin\n")
+    
+    
+    df_day1=pd.read_csv(dir_for_analy.parent.joinpath('raw_text_L1.txt'))
+    label1=df_day1.iloc[0,1].split()[0]
+    label1_date=label1.split("/")
+    
+    df_day2=pd.read_csv(dir_for_analy.parent.joinpath('raw_text_L2.txt'))
+    label2=df_day2.iloc[0,1].split()[0]
+    label2_date=label2.split("/")
+    
+    df_day3=pd.read_csv(dir_for_analy.parent.joinpath('raw_text_L3.txt'))
+    label3=df_day3.iloc[0,1].split()[0]
+    label3_date=label3.split("/")
+    
+    
+    lst_label_dates=[label1_date,label2_date,label3_date]
+    lst_parameters=[]
+    
+    
+    for dates in lst_label_dates:
+        for i in dates:
+           lst_parameters.append(i) 
+    
+    
+    
+    origin_plotting(dir_for_analy,sensor_name,lst_parameters)
+
+
+
+
+def connect_to_origin():
+    # Connect to Origin client
+    # OriginExt.Application() forces a new connection
+    origin = OriginExt.ApplicationSI()
+    origin.Visible = origin.MAINWND_SHOW # Make session visible
+    # Session can be later closed using origin.Exit()
+    # Close previous project and make a new one
+    # origin.NewProject()
+    # Wait for origin to compile
+    # https://www.originlab.com/doc/LabTalk/ref/Second-cmd#-poc.3B_Pause_up_to_the_specified_number_of_seconds_to_wait_for_Origin_OC_startup_compiling_to_finish
+    origin.Execute("sec -poc 3.5")
+    time.sleep(3.5)
+    return origin
+    
+
+
+def save_project(origin,project_name,full_path):
+    # File ending is automatically added by origin
+    project_name = project_name.replace('.opju','').replace('.opj','')
+    origin.Execute("save " + os.path.join(full_path,project_name))
+
+
+
+
+def origin_plotting(dir_for_analy,sensor_name,lst_parameters):
+    
+    origin = OriginExt.Application()
+    origin.Visible = origin.MAINWND_SHOW # Make session visible
+    origin.NewProject()
+    path_to_file = dir_for_analy.joinpath('Origin_After_Stabilization.OPJ')
+    origin.Load(str(path_to_file))
+
+    time.sleep(7)
+    
+#    path_to_origin2018_32bit = '"C:\\Program Files\\OriginLab\\Origin2018\\Origin95.exe"'
+#    
+#    path_to_file = dir_for_analy.joinpath('Origin_After_Stabilization.OPJ')
+#
+#    subprocess.call([path_to_origin2018_32bit, path_to_file])
+#    time.sleep(5)
+#    
+#    origin = connect_to_origin()
+#    
+    
+    lstfiles=['RESULT1.DAT','RESULT2.DAT','RESULT3.DAT']
+    lst_workbooknames=['RESULT','RESULT2','RESULT3']
+    
+    for datfile,name_wb in zip(lstfiles,lst_workbooknames):
+        dfresult = pd.read_csv(dir_for_analy.joinpath(datfile),delimiter= '\s+')
+        for col_idx in range(len(dfresult.columns)):
+            data=list(dfresult.iloc[:,col_idx])
+            
+            origin.PutWorksheet('['+name_wb+']'+"Sheet1", data, 0, col_idx) # start row, start col
+    
+    
+    #putting those extra parameters into origin file
+    origin.PutWorksheet("[RESULT]Sheet1", lst_parameters, 0, 5) # row 0, col 0
+    name_to_save=sensor_name+'Origin_After_Stabilization.OPJ'
+    save_project(origin,name_to_save,str(dir_for_analy))
+    
+    origin.Exit()
+    #Removing the file that has been copied from the resources
+    file_to_rem = dir_for_analy.joinpath('Origin_After_Stabilization.OPJ')
+    file_to_rem.unlink()
+
+
+
+
     
     
 def endurance_test(df_endu_channels,dir_for_analy,sensor_name):
@@ -668,10 +776,11 @@ def endurance_test(df_endu_channels,dir_for_analy,sensor_name):
     
     df = pd.read_csv(dir_for_analy.joinpath("endu_sample2.csv"))
     
-    for i,j in zip(list(range(0,12)),list(range(0,2))):
-        df.iloc[i,j+1]=df_endu_channels.iloc[i,j]
-    
-    
+    for i in (range(0,12)):
+        for j in (range(0,2)):
+            df.iloc[i,j+1]=df_endu_channels.iloc[i,j]
+        
+        
     
     
     # add a table to the end and create a reference variable
@@ -772,7 +881,7 @@ def endurance_test(df_endu_channels,dir_for_analy,sensor_name):
 
 
     
-def plotting_graph(dir_for_analy,sensor_name):
+def matplotplibplotting_graph(dir_for_analy,sensor_name):
     
     #Getting the dates of their execution
     df_day1=pd.read_csv(dir_for_analy.parent.joinpath('raw_text_L1.txt'))
@@ -786,90 +895,373 @@ def plotting_graph(dir_for_analy,sensor_name):
     pdresult1 = pd.read_csv(dir_for_analy.joinpath('RESULT1.DAT'),delimiter= '\s+')
     pdresult2 = pd.read_csv(dir_for_analy.joinpath('RESULT2.DAT'),delimiter= '\s+')
     pdresult3 = pd.read_csv(dir_for_analy.joinpath('RESULT3.DAT'),delimiter= '\s+')
-    
-    #plt.rc('text', usetex=True)
-    
+
     x = list(pdresult1['Ts'])
-    y_list1 = list(pdresult1['Misalign34'])
-    y_list2 = list(pdresult2['Misalign34'])
-    y_list3 = list(pdresult3['Misalign34'])
     
-    # Create Figure (empty canvas)
-    fig = plt.figure()
-    
-    # Add set of axes to figure
-    axes = fig.add_axes([0.1, 0.1, 1, 1]) # left, bottom, width, height (range 0 to 1)
-    
-    # Plot on that set of axes
-    axes.grid(True)
-    axes.plot(x, y_list1,color='red',linewidth=1,alpha=1,linestyle='-',marker='o',markersize=2,
-              markerfacecolor='red', markeredgewidth=3, markeredgecolor='red',label=label1)
-    
-    
-    axes.plot(x, y_list2,color='green',linewidth=1,alpha=1,linestyle='-',marker='s',markersize=2,
-              markerfacecolor='green', markeredgewidth=3, markeredgecolor='green',label=label2)
-    axes.plot(x, y_list3,color='blue',linewidth=1,alpha=1,linestyle='-',marker='s',markersize=2,
-              markerfacecolor='blue', markeredgewidth=3, markeredgecolor='blue',label=label3)
-    
-    #axes.plot(x,z)
-    axes.set_xlabel('Temp $^\circ$ C') # Notice the use of set_ to begin methods  
-    axes.set_ylabel('Scale, $mA(m/s^2)$')
-    #axes.set_title('Set Title')
-    axes.legend(loc=0)
-    # legend
-    #plt.legend(('phase field', 'level set', 'sharp interface'),
-    #           shadow=True, loc=(0.01, 0.48), handlelength=1.5, fontsize=16)
-    
-    
-    #fig.savefig("filename.png", dpi=200)
-    
-    locs, labels = plt.yticks() 
-    for index,tuplexy in enumerate(zip(x, y_list1)):
-        i_x=tuplexy[0]
-        i_y=tuplexy[1]
-        #print("{},{},{}".format(index,i_x, i_y))
-        label='{1:.7f}[{0}]'.format(index+1, i_y)
-        #plt.text(i_x, i_y,string )
-        plt.annotate(label, # this is the text
-                     (i_x,i_y), # this is the point to label
-                     textcoords="offset points", # how to position the text
-                     xytext=(0,-2*index+20), # distance from text to points (x,y)
-                     ha='center',color='red') # horizontal alignment can be left, right or center
+    def scale():
         
         
-    for index,tuplexy in enumerate(zip(x, y_list2)):
-        i_x=tuplexy[0]
-        i_y=tuplexy[1]
-        #print("{},{},{}".format(index,i_x, i_y))
-        label='{1:.7f}[{0}]'.format(index+1, i_y)
-        #plt.text(i_x, i_y,string )
-        plt.annotate(label, # this is the text
-                     (i_x,i_y), # this is the point to label
-                     textcoords="offset points", # how to position the text
-                     xytext=(0,-3*index-20), # distance from text to points (x,y)
-                     ha='center',color='green') # horizontal alignment can be left, right or center   
+        #plt.rc('text', usetex=True)
+        
+        
+        y_list1 = list(pdresult1['Scale'])
+        y_list2 = list(pdresult2['Scale'])
+        y_list3 = list(pdresult3['Scale'])
+        
+        # Create Figure (empty canvas)
+        fig = plt.figure()
+        
+        # Add set of axes to figure
+        axes = fig.add_axes([0.1, 0.1, 1, 1]) # left, bottom, width, height (range 0 to 1)
+        
+        # Plot on that set of axes
+        axes.grid(True)
+        axes.plot(x, y_list1,color='red',linewidth=1,alpha=1,linestyle='-',marker='o',markersize=2,
+                  markerfacecolor='red', markeredgewidth=3, markeredgecolor='red',label="x**2")
+        
+        
+        axes.plot(x, y_list2,color='green',linewidth=1,alpha=1,linestyle='-',marker='s',markersize=2,
+                  markerfacecolor='green', markeredgewidth=3, markeredgecolor='green',label="x**3")
+        axes.plot(x, y_list3,color='blue',linewidth=1,alpha=1,linestyle='-',marker='s',markersize=2,
+                  markerfacecolor='blue', markeredgewidth=3, markeredgecolor='blue',label="x**4")
+        
+        #axes.plot(x,z)
+        axes.set_xlabel('Temp $^\circ$ C') # Notice the use of set_ to begin methods  
+        axes.set_ylabel('Scale, $mA(m/s^2)$')
+        
+        
+        axes.set_xlim(min(x),max(x) )
+        axes.set_ylim(min(min(y_list1), min(y_list2), min(y_list3)), max(max(y_list1), max(y_list2),max(y_list3)))
+        
+        
+        
+        #axes.set_title('Set Title')
+        axes.legend(loc=0)
+        # legend
+        #plt.legend(('phase field', 'level set', 'sharp interface'),
+        #           shadow=True, loc=(0.01, 0.48), handlelength=1.5, fontsize=16)
+        
+        
+        #fig.savefig("filename.png", dpi=200)
+        
+        locs, labels = plt.yticks() 
+        for index,tuplexy in enumerate(zip(x, y_list1)):
+            i_x=tuplexy[0]
+            i_y=tuplexy[1]
+            #print("{},{},{}".format(index,i_x, i_y))
+            label='{1:.7f}[{0}]'.format(index+1, i_y)
+            #plt.text(i_x, i_y,string )
+            plt.annotate(label, # this is the text
+                         (i_x,i_y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,-2*index+20), # distance from text to points (x,y)
+                         ha='center',color='red') # horizontal alignment can be left, right or center
+            
+            
+        for index,tuplexy in enumerate(zip(x, y_list2)):
+            i_x=tuplexy[0]
+            i_y=tuplexy[1]
+            #print("{},{},{}".format(index,i_x, i_y))
+            label='{1:.7f}[{0}]'.format(index+1, i_y)
+            #plt.text(i_x, i_y,string )
+            plt.annotate(label, # this is the text
+                         (i_x,i_y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,-3*index-20), # distance from text to points (x,y)
+                         ha='center',color='green') # horizontal alignment can be left, right or center   
+        
+        for index,tuplexy in enumerate(zip(x, y_list3)):
+            i_x=tuplexy[0]
+            i_y=tuplexy[1]
+            #print("{},{},{}".format(index,i_x, i_y))
+            label='{1:.7f}[{0}]'.format(index+1, i_y)
+            #plt.text(i_x, i_y,string )
+            plt.annotate(label, # this is the text
+                         (i_x,i_y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,-3*index-60), # distance from text to points (x,y)
+                         ha='center',color='blue') # horizontal alignment can be left, right or center       
+            
+
+        plt.savefig(dir_for_analy.joinpath('fig_scale_'+sensor_name+'.png'))
+        plt.show()
     
-    for index,tuplexy in enumerate(zip(x, y_list3)):
-        i_x=tuplexy[0]
-        i_y=tuplexy[1]
-        #print("{},{},{}".format(index,i_x, i_y))
-        label='{1:.7f}[{0}]'.format(index+1, i_y)
-        #plt.text(i_x, i_y,string )
-        plt.annotate(label, # this is the text
-                     (i_x,i_y), # this is the point to label
-                     textcoords="offset points", # how to position the text
-                     xytext=(0,-3*index-60), # distance from text to points (x,y)
-                     ha='center',color='blue') # horizontal alignment can be left, right or center 
-    plt.savefig(dir_for_analy.joinpath('fig_'+sensor_name+'.png'))
-    plt.show()
+    
+    
+    
+    
+    
+    def bias12():
+        
+        #plt.rc('text', usetex=True)
+        
+        
+        y_list1 = list(pdresult1['Bias12'])
+        y_list2 = list(pdresult2['Bias12'])
+        y_list3 = list(pdresult3['Bias12'])
+        
+        # Create Figure (empty canvas)
+        fig = plt.figure()
+        
+        # Add set of axes to figure
+        axes = fig.add_axes([0.1, 0.1, 1, 1]) # left, bottom, width, height (range 0 to 1)
+        
+        # Plot on that set of axes
+        axes.grid(True)
+        axes.plot(x, y_list1,color='red',linewidth=1,alpha=1,linestyle='-',marker='o',markersize=2,
+                  markerfacecolor='red', markeredgewidth=3, markeredgecolor='red',label=label1)
+        
+        
+        axes.plot(x, y_list2,color='green',linewidth=1,alpha=1,linestyle='-',marker='s',markersize=2,
+                  markerfacecolor='green', markeredgewidth=3, markeredgecolor='green',label=label2)
+        axes.plot(x, y_list3,color='blue',linewidth=1,alpha=1,linestyle='-',marker='s',markersize=2,
+                  markerfacecolor='blue', markeredgewidth=3, markeredgecolor='blue',label=label3)
+        
+        #axes.plot(x,z)
+        axes.set_xlabel('Temp $^\circ$ C') # Notice the use of set_ to begin methods  
+        axes.set_ylabel('Bias12')
+        
+        
+        
+        axes.set_xlim(min(x),max(x) )
+        axes.set_ylim(min(min(y_list1), min(y_list2), min(y_list3)), max(max(y_list1), max(y_list2),max(y_list3)))
+        
+        
+        #axes.set_title('Set Title')
+        axes.legend(loc=0)
+        # legend
+        #plt.legend(('phase field', 'level set', 'sharp interface'),
+        #           shadow=True, loc=(0.01, 0.48), handlelength=1.5, fontsize=16)
+        
+        
+        #fig.savefig("filename.png", dpi=200)
+        
+        locs, labels = plt.yticks() 
+        for index,tuplexy in enumerate(zip(x, y_list1)):
+            i_x=tuplexy[0]
+            i_y=tuplexy[1]
+            #print("{},{},{}".format(index,i_x, i_y))
+            label='{1:.7f}[{0}]'.format(index+1, i_y)
+            #plt.text(i_x, i_y,string )
+            plt.annotate(label, # this is the text
+                         (i_x,i_y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,-2*index+20), # distance from text to points (x,y)
+                         ha='center',color='red') # horizontal alignment can be left, right or center
+            
+            
+        for index,tuplexy in enumerate(zip(x, y_list2)):
+            i_x=tuplexy[0]
+            i_y=tuplexy[1]
+            #print("{},{},{}".format(index,i_x, i_y))
+            label='{1:.7f}[{0}]'.format(index+1, i_y)
+            #plt.text(i_x, i_y,string )
+            plt.annotate(label, # this is the text
+                         (i_x,i_y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,-3*index-20), # distance from text to points (x,y)
+                         ha='center',color='green') # horizontal alignment can be left, right or center   
+        
+        for index,tuplexy in enumerate(zip(x, y_list3)):
+            i_x=tuplexy[0]
+            i_y=tuplexy[1]
+            #print("{},{},{}".format(index,i_x, i_y))
+            label='{1:.7f}[{0}]'.format(index+1, i_y)
+            #plt.text(i_x, i_y,string )
+            plt.annotate(label, # this is the text
+                         (i_x,i_y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,-3*index-60), # distance from text to points (x,y)
+                         ha='center',color='blue') # horizontal alignment can be left, right or center 
+        plt.savefig(dir_for_analy.joinpath('fig_bias12_'+sensor_name+'.png'))
+        plt.show()
+    
+    
+    
+    
+    
+    def bias34():
+        #print(pdresult1)
+        y_list1 = list(pdresult1['Bias34'])
+        #print(y_list1)
+        y_list2 = list(pdresult2['Bias34'])
+        #print(y_list2)
+        y_list3 = list(pdresult3['Bias34'])
+        #print(y_list3)
+        # Create Figure (empty canvas)
+        fig = plt.figure()
+        
+        # Add set of axes to figure
+        axes = fig.add_axes([0.1, 0.1, 1, 1]) # left, bottom, width, height (range 0 to 1)
+        
+        
+        #axes.plot(x,z)
+        axes.set_xlabel('Temp $^\circ$ C') # Notice the use of set_ to begin methods  axes.set_ylim(min(min(y_list1), min(y_list2), min(y_list3)), max(max(y_list1), max(y_list2),max(y_list3)))
+        axes.set_ylabel('Bias34')
+        
+#        for i,j,k in zip(y_list1,y_list2,y_list3):
+#            print(i,j,k)
+        
+        axes.set_xlim(min(x),max(x))
+#        axes.set_ylim(min(min(y_list1), min(y_list2), min(y_list3)), max(max(y_list1), max(y_list2),max(y_list3)))
+#        
+        
+        # Plot on that set of axes
+        axes.grid(True)
+        axes.plot(x, y_list1,color='red',linewidth=1,alpha=1,linestyle='-',marker='o',markersize=2,
+                  markerfacecolor='red', markeredgewidth=3, markeredgecolor='red',label=label1)
+        
+        
+        axes.plot(x, y_list2,color='green',linewidth=1,alpha=1,linestyle='-',marker='s',markersize=2,
+                  markerfacecolor='green', markeredgewidth=3, markeredgecolor='green',label=label2)
+        axes.plot(x, y_list3,color='blue',linewidth=1,alpha=1,linestyle='-',marker='s',markersize=2,
+                  markerfacecolor='blue', markeredgewidth=3, markeredgecolor='blue',label=label3)
+        
+        
+        
+        #axes.set_title('Set Title')
+        axes.legend(loc=0)
+        # legend
+        #plt.legend(('phase field', 'level set', 'sharp interface'),
+        #           shadow=True, loc=(0.01, 0.48), handlelength=1.5, fontsize=16)
+        
+        
+        #fig.savefig("filename.png", dpi=200)
+        
+        locs, labels = plt.yticks() 
+        for index,tuplexy in enumerate(zip(x, y_list1)):
+            i_x=tuplexy[0]
+            i_y=tuplexy[1]
+            #print("{},{},{}".format(index,i_x, i_y))
+            label='{1:.7f}[{0}]'.format(index+1, i_y)
+            #plt.text(i_x, i_y,string )
+            plt.annotate(label, # this is the text
+                         (i_x,i_y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,-2*index+20), # distance from text to points (x,y)
+                         ha='center',color='red') # horizontal alignment can be left, right or center
+            
+            
+        for index,tuplexy in enumerate(zip(x, y_list2)):
+            i_x=tuplexy[0]
+            i_y=tuplexy[1]
+            #print("{},{},{}".format(index,i_x, i_y))
+            label='{1:.7f}[{0}]'.format(index+1, i_y)
+            #plt.text(i_x, i_y,string )
+            plt.annotate(label, # this is the text
+                         (i_x,i_y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,-3*index-20), # distance from text to points (x,y)
+                         ha='center',color='green') # horizontal alignment can be left, right or center   
+        
+        for index,tuplexy in enumerate(zip(x, y_list3)):
+            i_x=tuplexy[0]
+            i_y=tuplexy[1]
+            #print("{},{},{}".format(index,i_x, i_y))
+            label='{1:.7f}[{0}]'.format(index+1, i_y)
+            #plt.text(i_x, i_y,string )
+            plt.annotate(label, # this is the text
+                         (i_x,i_y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,-3*index-60), # distance from text to points (x,y)
+                         ha='center',color='blue') # horizontal alignment can be left, right or center 
+        plt.savefig(dir_for_analy.joinpath('fig_bias34_'+sensor_name+'.png'))
+        plt.show()
+    
+        
+    
+    def misalign34():
+        
+        
+        #plt.rc('text', usetex=True)
+        
+        
+        y_list1 = list(pdresult1['Misalign34'])
+        y_list2 = list(pdresult2['Misalign34'])
+        y_list3 = list(pdresult3['Misalign34'])
+        
+        # Create Figure (empty canvas)
+        fig = plt.figure()
+        
+        # Add set of axes to figure
+        axes = fig.add_axes([0.1, 0.1, 1, 1]) # left, bottom, width, height (range 0 to 1)
+        
+        # Plot on that set of axes
+        axes.grid(True)
+        axes.plot(x, y_list1,color='red',linewidth=1,alpha=1,linestyle='-',marker='o',markersize=2,
+                  markerfacecolor='red', markeredgewidth=3, markeredgecolor='red',label=label1)
+        
+        
+        axes.plot(x, y_list2,color='green',linewidth=1,alpha=1,linestyle='-',marker='s',markersize=2,
+                  markerfacecolor='green', markeredgewidth=3, markeredgecolor='green',label=label2)
+        axes.plot(x, y_list3,color='blue',linewidth=1,alpha=1,linestyle='-',marker='s',markersize=2,
+                  markerfacecolor='blue', markeredgewidth=3, markeredgecolor='blue',label=label3)
+        
+        #axes.plot(x,z)
+        axes.set_xlabel('Temp $^\circ$ C') # Notice the use of set_ to begin methods  
+        axes.set_ylabel('Misalign')
+        
+        
+        
+        axes.set_xlim(min(x),max(x) )
+        axes.set_ylim(min(min(y_list1), min(y_list2), min(y_list3)), max(max(y_list1), max(y_list2),max(y_list3)))
+        
+        
+        #axes.set_title('Set Title')
+        axes.legend(loc=0)
+        # legend
+        #plt.legend(('phase field', 'level set', 'sharp interface'),
+        #           shadow=True, loc=(0.01, 0.48), handlelength=1.5, fontsize=16)
+        
+        
+        #fig.savefig("filename.png", dpi=200)
+        
+        locs, labels = plt.yticks() 
+        for index,tuplexy in enumerate(zip(x, y_list1)):
+            i_x=tuplexy[0]
+            i_y=tuplexy[1]
+            #print("{},{},{}".format(index,i_x, i_y))
+            label='{1:.7f}[{0}]'.format(index+1, i_y)
+            #plt.text(i_x, i_y,string )
+            plt.annotate(label, # this is the text
+                         (i_x,i_y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,-2*index+20), # distance from text to points (x,y)
+                         ha='center',color='red') # horizontal alignment can be left, right or center
+            
+            
+        for index,tuplexy in enumerate(zip(x, y_list2)):
+            i_x=tuplexy[0]
+            i_y=tuplexy[1]
+            #print("{},{},{}".format(index,i_x, i_y))
+            label='{1:.7f}[{0}]'.format(index+1, i_y)
+            #plt.text(i_x, i_y,string )
+            plt.annotate(label, # this is the text
+                         (i_x,i_y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,-3*index-20), # distance from text to points (x,y)
+                         ha='center',color='green') # horizontal alignment can be left, right or center   
+        
+        for index,tuplexy in enumerate(zip(x, y_list3)):
+            i_x=tuplexy[0]
+            i_y=tuplexy[1]
+            #print("{},{},{}".format(index,i_x, i_y))
+            label='{1:.7f}[{0}]'.format(index+1, i_y)
+            #plt.text(i_x, i_y,string )
+            plt.annotate(label, # this is the text
+                         (i_x,i_y), # this is the point to label
+                         textcoords="offset points", # how to position the text
+                         xytext=(0,-3*index-60), # distance from text to points (x,y)
+                         ha='center',color='blue') # horizontal alignment can be left, right or center 
+        plt.savefig(dir_for_analy.joinpath('fig_misalign_'+sensor_name+'.png'))
+        plt.show()
+
+    scale()
+    misalign34()
+    bias12()
+    bias34()
 
 
-#
-#
-#
-#
-#
-#
 #
 #
 #

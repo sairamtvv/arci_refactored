@@ -151,10 +151,12 @@ class Espec_Scheduler():
             tkMessageBox.showinfo("Clear","Please note that the clear button only cleans the display field but not the schedule. Please use 'DELETE EVENT' to delete any event")
             
                 
-        creat=Button(self.window.diff_tabs.tab1,text="CREATE  ",bg='#4d79ff',fg='white',font=("Helvetica",14),command=self.addElement).grid(column=0,ipadx=62,pady=5,row=10,sticky="W")
-        view=Button(self.window.diff_tabs.tab1, text="All Event",bg='#ff5050',fg='white',font=("Helvetica",14),command=viewPrint).grid(column=0,ipadx=70,row=11,pady=5,sticky="W")
-        clear=Button(self.window.diff_tabs.tab1,text="CLEAR   ",bg='#ffc34d',fg='white',font=("Helvetica",14),command=clean).grid(column=0,ipadx=66,row=12,pady=5,sticky="W")
-
+        creat=Button(self.window.diff_tabs.tab1,text="CREATE  ",bg='#4d79ff',fg='white',font=("Helvetica",14),command=self.addElement)
+        creat.grid(column=0,ipadx=62,pady=5,row=10,sticky="W")
+        view=Button(self.window.diff_tabs.tab1, text="All Event",bg='#ff5050',fg='white',font=("Helvetica",14),command=viewPrint)
+        view.grid(column=0,ipadx=70,row=11,pady=5,sticky="W")
+        clear=Button(self.window.diff_tabs.tab1,text="CLEAR   ",bg='#ffc34d',fg='white',font=("Helvetica",14),command=clean)
+        clear.grid(column=0,ipadx=66,row=12,pady=5,sticky="W")
     def addElement(self):
         def allEvent():
             tkMessageBox.showinfo("Created","Event Created")
@@ -340,16 +342,24 @@ class Espec_Scheduler():
                     showbiz.insert(INSERT,contents)
                     showbiz.see(INSERT)
        
-        monday=Button(self.window.diff_tabs.tab2, text="Monday",bg="#4d79ff",fg="white",font=("Helvetica",14),command=printMonday).grid(column=0,row=2,ipadx=18,pady=5)
-        tuesday=Button(self.window.diff_tabs.tab2, text="Tuesday",bg="#ff5050",fg="white",font=("Helvetica",14),command=printTuesday).grid(column=1,row=2,ipadx=11,pady=5)
-        wednesday=Button(self.window.diff_tabs.tab2, text="Wednesday",bg="#ffc34d",fg="white",font=("Helvetica",14),command=printWednesday).grid(column=0,row=3,pady=5)
-        thursday=Button(self.window.diff_tabs.tab2, text="Thursday",bg="#4d79ff",fg="white",font=("Helvetica",14),command=printThursday).grid(column=1,row=3,ipadx=10,pady=5)
-        friday=Button(self.window.diff_tabs.tab2, text="Friday",bg="#009900",fg="white",font=("Helvetica",14),command=printFriday).grid(column=0,row=4,pady=5,ipadx=24)
-        saturday=Button(self.window.diff_tabs.tab2, text="Saturday",bg="#ff5050",fg="white",font=("Helvetica",14),command=printSaturday).grid(column=1,row=4,ipadx=15,pady=5)
-        sunday=Button(self.window.diff_tabs.tab2, text="Sunday",bg="#ffc34d",fg="white",font=("Helvetica",14),command=printSunday).grid(column=0,row=5,pady=5,ipadx=20)
+        monday=Button(self.window.diff_tabs.tab2, text="Monday",bg="#4d79ff",fg="white",font=("Helvetica",14),command=printMonday)
+        monday.grid(column=0,row=2,ipadx=18,pady=5)
+        tuesday=Button(self.window.diff_tabs.tab2, text="Tuesday",bg="#ff5050",fg="white",font=("Helvetica",14),command=printTuesday)
+        tuesday.grid(column=1,row=2,ipadx=11,pady=5)
+        wednesday=Button(self.window.diff_tabs.tab2, text="Wednesday",bg="#ffc34d",fg="white",font=("Helvetica",14),command=printWednesday)
+        wednesday.grid(column=0,row=3,pady=5)
+        thursday=Button(self.window.diff_tabs.tab2, text="Thursday",bg="#4d79ff",fg="white",font=("Helvetica",14),command=printThursday)
+        thursday.grid(column=1,row=3,ipadx=10,pady=5)
+        friday=Button(self.window.diff_tabs.tab2, text="Friday",bg="#009900",fg="white",font=("Helvetica",14),command=printFriday)
+        friday.grid(column=0,row=4,pady=5,ipadx=24)
+        saturday=Button(self.window.diff_tabs.tab2, text="Saturday",bg="#ff5050",fg="white",font=("Helvetica",14),command=printSaturday)
+        saturday.grid(column=1,row=4,ipadx=15,pady=5)
+        sunday=Button(self.window.diff_tabs.tab2, text="Sunday",bg="#ffc34d",fg="white",font=("Helvetica",14),command=printSunday)
+        sunday.grid(column=0,row=5,pady=5,ipadx=20)
         showbiz=Text(self.window.diff_tabs.tab2,width=97,height=22)
         showbiz.grid(columnspan=3)
-        allEvent=Button(self.window.diff_tabs.tab2, text="All Events",bg="orange",fg="white",font=("Helvetica",14),command=printAllEvent).grid(column=1,row=5,ipadx=8,pady=5)    
+        allEvent=Button(self.window.diff_tabs.tab2, text="All Events",bg="orange",fg="white",font=("Helvetica",14),command=printAllEvent)
+        allEvent.grid(column=1,row=5,ipadx=8,pady=5)
 #***********************************************************************************************************************
     def populate_tab_deleteschedule(self):
         def deleteMonday():
@@ -396,15 +406,22 @@ class Espec_Scheduler():
                     file_new=open(file_name,"w").close()
                 tkMessageBox.showinfo("Deleted","All Events Deleted")
 
-        monday=Button(self.window.diff_tabs.tab3, text="Delete Monday",bg='#4d79ff',fg='white',font=("Helvetica",14),command=deleteMonday).pack(fill=X,padx=100,ipady=10,pady=10)
-        tuesday=Button(self.window.diff_tabs.tab3, text="Delete Tuesday",bg='#ff5050',fg='white',font=("Helvetica",14),command=deleteTuesday).pack(fill=X,padx=100,ipady=10,pady=10)
-        wednesday=Button(self.window.diff_tabs.tab3, text="Delete Wednesday",bg='#ffc34d',fg='white',font=("Helvetica",14),command=deleteWednesday).pack(fill=X,padx=100,ipady=10,pady=10)
-        thursday=Button(self.window.diff_tabs.tab3, text="Delete Thursday",bg='#4d79ff',fg='white',font=("Helvetica",14),command=deleteThursday).pack(fill=X,padx=100,ipady=10,pady=10)
-        friday=Button(self.window.diff_tabs.tab3, text="Delete Friday",bg='#009900',fg='white',font=("Helvetica",14),command=deleteFriday).pack(fill=X,padx=100,ipady=10,pady=10)
-        saturday=Button(self.window.diff_tabs.tab3, text="Delete Saturday",bg='#ff5050',fg='white',font=("Helvetica",14),command=deleteSaturday).pack(fill=X,padx=100,ipady=10,pady=10)
-        sunday=Button(self.window.diff_tabs.tab3, text="Delete Sunday",bg='#ffc34d',fg='white',font=("Helvetica",14),command=deleteSunday).pack(fill=X,padx=100,ipady=10,pady=10)
-        allEvent=Button(self.window.diff_tabs.tab3, text="Delete all Events",bg='orange',fg='white',font=("Helvetica",14),command=deleteAllEvent).pack(fill=X,padx=100,ipady=10,pady=10)
-
+        monday=Button(self.window.diff_tabs.tab3, text="Delete Monday",bg='#4d79ff',fg='white',font=("Helvetica",14),command=deleteMonday)
+        monday.pack(fill=X,padx=100,ipady=10,pady=10)
+        tuesday=Button(self.window.diff_tabs.tab3, text="Delete Tuesday",bg='#ff5050',fg='white',font=("Helvetica",14),command=deleteTuesday)
+        tuesday.pack(fill=X,padx=100,ipady=10,pady=10)
+        wednesday=Button(self.window.diff_tabs.tab3, text="Delete Wednesday",bg='#ffc34d',fg='white',font=("Helvetica",14),command=deleteWednesday)
+        wednesday.pack(fill=X,padx=100,ipady=10,pady=10)
+        thursday=Button(self.window.diff_tabs.tab3, text="Delete Thursday",bg='#4d79ff',fg='white',font=("Helvetica",14),command=deleteThursday)
+        thursday.pack(fill=X,padx=100,ipady=10,pady=10)
+        friday=Button(self.window.diff_tabs.tab3, text="Delete Friday",bg='#009900',fg='white',font=("Helvetica",14),command=deleteFriday)
+        friday.pack(fill=X,padx=100,ipady=10,pady=10)
+        saturday=Button(self.window.diff_tabs.tab3, text="Delete Saturday",bg='#ff5050',fg='white',font=("Helvetica",14),command=deleteSaturday)
+        saturday.pack(fill=X,padx=100,ipady=10,pady=10)
+        sunday=Button(self.window.diff_tabs.tab3, text="Delete Sunday",bg='#ffc34d',fg='white',font=("Helvetica",14),command=deleteSunday)
+        sunday.pack(fill=X,padx=100,ipady=10,pady=10)
+        allEvent=Button(self.window.diff_tabs.tab3, text="Delete all Events",bg='orange',fg='white',font=("Helvetica",14),command=deleteAllEvent)
+        allEvent.pack(fill=X,padx=100,ipady=10,pady=10)
 
 #if __name__ == '__main__':
 #    #======================

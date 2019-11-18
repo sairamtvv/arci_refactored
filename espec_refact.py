@@ -40,16 +40,38 @@ class Espec_Communication():
             sys.exit(0)
             
     def check_temp_reached_espec(self,desired_temp):
-        SCPI_sock_send(self.espec_session,'TEMP?')
-        output=self.espec_session.recv(20).decode()
-        lstoutput=output.split(",")
+        def read_current_value():
+            SCPI_sock_send(self.espec_session,'TEMP?')
+            output=self.espec_session.recv(20).decode()
+            lstoutput=output.split(",")
+            return float(lstoutput[0])
+            
         #21.3,-40.0,165.0,-70
         print(f"Waiting for temperature: {desired_temp}")
-        while(float(lstoutput[0])!=desired_temp):
-            time.sleep(60)
-        print(f"Reached the desired temperature:{desired_temp}")
+        extra_delay=0
+#        while(float(lstoutput[0])!=desired_temp):
+        while(read_current_value()!=desired_temp):
+            extra_delay=extra_delay+1
+            self.my_sleep_in_min(1)
+            print(f"Extra time waited to reach the temperature {desired_temp} is {extra_delay} min")
+            if extra_delay == 10:
+               print("waited for extra 10 min so breaking")
+               break 
         
+        if (read_current_value()==desired_temp):
+            print(f"Reached the desired temperature:{desired_temp}")
         
+          
+    def my_sleep_in_min(self,delay):
+        
+        if (self.realrun==1):
+           print(f"Waiting for {delay} minutes now...\n") 
+           time.sleep(delay*60) 
+        else:
+            print(f"Testing, if not I would have waited for {delay} minutes\n") 
+
+
+       
     def put_on_espec(self):
         SCPI_sock_send(self.espec_session,'POWER, ON')
         print(self.espec_session.recv(20).decode())

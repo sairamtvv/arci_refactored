@@ -125,7 +125,7 @@ class Aero_Position_Communication():
             print("Invalid Position Number...")
             sys.exit(0)
 
-        print("waiting for two minutes to set to desired position")
+        print(f"waiting for one minute to set to desired position {desired_pos}")
         time.sleep(1)
         imme_comm.send_keys(Keys.RETURN)
         time.sleep(60)

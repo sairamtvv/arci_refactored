@@ -146,7 +146,7 @@ class different_tabs():
         for num,pick in enumerate(self.picks):
             var = IntVar()
             chk = ttk.Checkbutton(self.widgetFrame,  text=pick, variable=var)
-            createToolTip(chk, 'Donot select D5 alone without D4')
+            createToolTip(chk, 'Please select the days for which acquisition is over and update')
             chk.grid(column=num+1, row=0, sticky="W" )
             self.vars.append(var)
                  
@@ -348,7 +348,7 @@ class different_tabs():
         self.resourcelocation=self.root_folder+'resources/'
         self.datalogger_title=u'Configuration - 2 - BenchLink Data Logger 3'
         
-        self.defaultlocation=self.root_folder
+        #self.defaultlocation=self.root_folder
         
         
         # All Paths  needs to be here as sensorname is part of the path

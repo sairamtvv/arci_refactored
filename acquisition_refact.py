@@ -38,42 +38,56 @@ class Acquisition():
         if self.window.diff_tabs.comboday_set == 'D6':
             self.window.acquisition.endurancetest()
           
+    def my_sleep_in_min(self,delay):
+        
+        if (self.realrun==1):
+            print(f"Waiting for {delay} minutes now...\n") 
+            time.sleep(delay*60) 
+        else:
+            print(f"Testing, if not I would have waited for {delay} minutes\n")
+    
+    
+    
     def acquistionL123(self):
 
         #lsttemp=np.array([70,42.5,15,-12.5,-40,-12.5,15,42.5,70])
         lstramp=np.array([30,15,15,25,35,15,15,15,15])
         lstramp=lstramp[0:self.window.diff_tabs.tempruns_set]
-        lstrampdelay=(lstramp+40)*0.01
+        lstrampdelay=(lstramp+40)
+        
 #        lstrampdelay=(lstramp+40)*0.01
         #range starts from 0
         #for tempiter in range(1,int(self.tempruns_set)+1):
         for tempiter,actual_temp in enumerate(lstrampdelay):
-            print("1st sleep")
+            #print("1st sleep")
             tempiter=tempiter+1
-            #self.check_temp_reached(actual_temp)
+            self.window.espec_comm.set_temp_espec(actual_temp)
+            self.window.espec_comm.check_temp_reached(actual_temp)
             #time.sleep((lstrampdelay[tempiter-1]+40)*60)
-            time.sleep((lstrampdelay[tempiter-1])*60)
+            self.my_sleep_in_min((lstrampdelay[tempiter-1]))
+            #time.sleep((lstrampdelay[tempiter-1])*60)
             #---position one start--------
             #position numbers are importsnt as desired aerotech position depends on this number
             
             positionnumber=1
             print(f"positionnumber={positionnumber}")
             self.window.aerotec_comm.desired_aerotech_pos(positionnumber)
-            self.window.acquisition.autoitdataloggerL123(tempiter,positionnumber)
-            
+#            self.window.acquisition.autoitdataloggerL123(tempiter,positionnumber)
+            self.autoitdataloggerL123(tempiter,positionnumber)
+
             #-------finished one position------------------------------------------
 
             positionnumber=2
             print(f"positionnumber={positionnumber}")            
             self.window.aerotec_comm.desired_aerotech_pos(positionnumber)
-            self.window.acquisition.autoitdataloggerL123(tempiter,positionnumber)
+            self.autoitdataloggerL123(tempiter,positionnumber)
             
             #-------finished two position------------------------------------------
 
             positionnumber=3
             print(f"positionnumber={positionnumber}")  
             self.window.aerotec_comm.desired_aerotech_pos(positionnumber)
-            self.window.acquisition.autoitdataloggerL123(tempiter,positionnumber)
+            self.autoitdataloggerL123(tempiter,positionnumber)
            
 
             #-------finished THREE position------------------------------------------
@@ -81,7 +95,7 @@ class Acquisition():
             positionnumber=4
             print(f"positionnumber={positionnumber}")  
             self.window.aerotec_comm.desired_aerotech_pos(positionnumber)
-            self.window.acquisition.autoitdataloggerL123(tempiter,positionnumber)
+            self.autoitdataloggerL123(tempiter,positionnumber)
             
 
 
@@ -114,11 +128,16 @@ class Acquisition():
         for tempiter,actual_temp in enumerate(lsttemp):
 
             tempiter=tempiter+1
-#            #self.check_temp_reached(actual_temp)
-#            #step 1 waiting for temperature ramp for 1 hr
-#            time.sleep(60*60)
-#            #step 2 waiting at that temperature for 1 hr
-#            time.sleep(60*60)
+            self.window.espec_comm.set_temp_espec(actual_temp)
+            self.window.espec_comm.check_temp_reached(actual_temp)
+            
+            #self.check_temp_reached(actual_temp)
+            #step 1 waiting for temperature ramp for 1 hr
+            self.my_sleep_in_min(60)
+            #time.sleep(60*60)
+            #step 2 waiting at that temperature for 1 hr
+            self.my_sleep_in_min(60)
+            #time.sleep(60*60)
 
 
             #step 3 Acquistion by altering the position
@@ -127,14 +146,15 @@ class Acquisition():
 
                 positionnumber =1
                 self.window.aerotec_comm.desired_aerotech_pos(positionnumber)
-                self.window.acquisition.autoitdataloggerD45(tempiter,positionnumber,cycle)
+                self.autoitdataloggerD45(tempiter,positionnumber,cycle)
 
                 positionnumber =2
                 self.window.aerotec_comm.desired_aerotech_pos(positionnumber)
-                self.window.acquisition.autoitdataloggerD45(tempiter,positionnumber,cycle)
+                self.autoitdataloggerD45(tempiter,positionnumber,cycle)
 
-#            #step 4 waiting for 30 minutes
-#            time.sleep(30*60)
+            #step 4 waiting for 30 minutes
+            self.my_sleep_in_min(30)    
+            #time.sleep(30*60)
 
             #step 5 Acquistion by altering the position 3 and 4
             for cycle in range(1,7):
@@ -149,8 +169,9 @@ class Acquisition():
                 self.window.acquisition.autoitdataloggerD45(tempiter,positionnumber,cycle)
 
 
-#            #step 6 waiting for 30 minutes
-#            time.sleep(30*60)
+            #step 6 waiting for 30 minutes
+            self.my_sleep_in_min(30)    
+            #time.sleep(30*60)
 
 
             #step 7 Acquiring 10 readings in position
@@ -158,15 +179,22 @@ class Acquisition():
             positionnumber =33
 
             self.window.aerotec_comm.desired_aerotech_pos(3)
-
-            for cycle in range(1,11):
-                #print ("Start : %s" % time.ctime())
-                self.window.acquisition.autoitdataloggerD45(tempiter,positionnumber,cycle)
-                #print ("Stop : %s" % time.ctime())
+            
+            self.window.datalogger_comm.dataloggerfor33_10conseq()
+            
+            
+            
+            
+#
+#            for cycle in range(1,11):
+#                #print ("Start : %s" % time.ctime())
+#                self.window.acquisition.autoitdataloggerD45(tempiter,positionnumber,cycle)
+#                #print ("Stop : %s" % time.ctime())
 
         self.summaryD4()
 
 
+    
 
     def finalanalysisD45(self):
         dfD4summary_temp1=pd.read_csv('D4summary_temp1.txt')
@@ -191,10 +219,10 @@ class Acquisition():
         df_finalD45_temp3=pd.concat([dfD4summary_temp3,dfD5_temp3_pos5,dfD5_temp3_pos6],axis=1)
         df_finalD45_temp3.to_csv('finalD45_temp3.txt',index=False)
         
-        
-        dfD4_temp1_pos33=pd.read_csv('raw_text_D4_1_33.txt')
-        dfD4_temp2_pos33=pd.read_csv('raw_text_D4_2_33.txt')
-        dfD4_temp3_pos33=pd.read_csv('raw_text_D4_3_33.txt')
+#        
+#        dfD4_temp1_pos33=pd.read_csv('raw_text_D4_1_33.txt')
+#        dfD4_temp2_pos33=pd.read_csv('raw_text_D4_2_33.txt')
+#        dfD4_temp3_pos33=pd.read_csv('raw_text_D4_3_33.txt')
 
 
 
@@ -203,7 +231,7 @@ class Acquisition():
         this Concat does along the columns
         """
 
-        if self.tempruns_D45_set==3:
+        if self.window.diff_tabs.tempruns_D45_set==3:
 
             dfD5_temp1_pos1= pd.read_csv('raw_text_D5_1_1.txt')
             dfD5_temp1_pos2= pd.read_csv('raw_text_D5_1_2.txt')
@@ -232,7 +260,7 @@ class Acquisition():
         this Concat does along the columns
         """
 
-        if self.tempruns_D45_set==3:
+        if self.window.diff_tabs.tempruns_D45_set==3:
 
             dfD4_temp1_pos1= pd.read_csv('raw_text_D4_1_1.txt')
             dfD4_temp1_pos2= pd.read_csv('raw_text_D4_1_2.txt')
@@ -301,11 +329,15 @@ class Acquisition():
         for tempiter,actual_temp in enumerate(lsttemp):
 
             tempiter=tempiter+1
-#            #self.check_temp_reached(actual_temp)
-#            #step 1 waiting for temperature ramp for 1 hr
-#            time.sleep(60*60)
-#            #step 2 waiting at that temperature for 1 hr
-#            time.sleep(60*60)
+            self.window.espec_comm.set_temp_espec(actual_temp)
+            self.window.espec_comm.check_temp_reached(actual_temp)
+            #self.check_temp_reached(actual_temp)
+            #step 1 waiting for temperature ramp for 1 hr
+            self.my_sleep_in_min(60)
+            #time.sleep(60*60)
+            #step 2 waiting at that temperature for 1 hr
+            self.my_sleep_in_min(60)
+            #time.sleep(60*60)
 
             #step 3 Acquistion by altering the position
             for cycle in range(1,7):
@@ -324,8 +356,8 @@ class Acquisition():
     def acquisitionD6(self):
         positionnumber=1
         self.window.aerotec_comm.desired_aerotech_pos(positionnumber)
-        for run in range(1,15):
-#            time.sleep(2*60)
+        for run in range(1,13):
+            self.my_sleep_in_min(2*60)
             self.window.acquisition.autoitdataloggerL123(run,positionnumber)
            
 
